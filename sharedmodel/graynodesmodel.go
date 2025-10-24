@@ -24,6 +24,13 @@ type GrayNode struct {
 	CreateAt  time.Time `bson:"createAt" json:"createAt"`
 }
 
+type GrayNodesRecord struct {
+	ID        string    `bson:"_id" json:"id"`
+	ReleaseId string    `bson:"releaseId" json:"releaseId"`
+	NodeId    string    `bson:"nodeId" json:"nodeId"`
+	CreateAt  time.Time `bson:"createAt" json:"createAt"`
+}
+
 type GrayNodesModel interface {
 	Upsert(ctx context.Context, data *GrayNode) error
 	UpsertBulk(ctx context.Context, datas []*GrayNode) error

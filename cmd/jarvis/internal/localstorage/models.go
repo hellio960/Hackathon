@@ -229,6 +229,43 @@ func (m *localSysParamModel) Key(name string) string {
 	return sharedmodel.PrefixSysParamCacheKey + name
 }
 
+func (m *localSysParamModel) Upsert(ctx context.Context, data *sharedmodel.SysParam) error {
+	existing, _ := m.FindOne(ctx, data.Name)
+	if existing != nil {
+		return m.Update(ctx, data)
+	}
+	return m.Insert(ctx, data)
+}
+
+func (m *localSysParamModel) FindByName(ctx context.Context, name string) (*sharedmodel.SysParam, error) {
+	return m.FindOne(ctx, name)
+}
+
+func (m *localSysParamModel) FindByNamePattern(ctx context.Context, namePattern string) ([]*sharedmodel.SysParam, error) {
+	var results []*sharedmodel.SysParam
+	filter := func(doc interface{}) bool {
+		data, _ := json.Marshal(doc)
+		var param sharedmodel.SysParam
+		json.Unmarshal(data, &param)
+		// Simple pattern matching - checks if name contains the pattern
+		return len(param.Name) >= len(namePattern) && 
+			(param.Name[:len(namePattern)] == namePattern || 
+			 findSubstring(param.Name, namePattern))
+	}
+	
+	err := m.coll.FindAll(ctx, filter, &results)
+	return results, err
+}
+
+func findSubstring(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
+
 type localUpdRecordModel struct {
 	coll *Collection
 }
@@ -240,18 +277,21 @@ func NewLocalUpdRecordModel(dataDir string) model.UpdRecordModel {
 	}
 }
 
-func (m *localUpdRecordModel) Insert(ctx context.Context, data *sharedmodel.UpdRecord) error {
+func (m *localUpdRecordModel) Insert(ctx context.Context, data *model.UpdRecordTemplate) error {
 	if data.ID == "" {
 		data.ID = primitive.NewObjectID().Hex()
 	}
 	if data.CreateAt.IsZero() {
 		data.CreateAt = time.Now()
 	}
+	if data.UpdateAt.IsZero() {
+		data.UpdateAt = time.Now()
+	}
 	return m.coll.Insert(ctx, data.ID, data)
 }
 
-func (m *localUpdRecordModel) FindOne(ctx context.Context, id string) (*sharedmodel.UpdRecord, error) {
-	var result sharedmodel.UpdRecord
+func (m *localUpdRecordModel) FindOne(ctx context.Context, id string) (*model.UpdRecordTemplate, error) {
+	var result model.UpdRecordTemplate
 	err := m.coll.FindOne(ctx, id, &result)
 	if err == ErrNotFound {
 		return nil, sharedmodel.ErrNotFound
@@ -259,12 +299,17 @@ func (m *localUpdRecordModel) FindOne(ctx context.Context, id string) (*sharedmo
 	return &result, err
 }
 
-func (m *localUpdRecordModel) Update(ctx context.Context, data *sharedmodel.UpdRecord) error {
+func (m *localUpdRecordModel) Update(ctx context.Context, data *model.UpdRecordTemplate) error {
+	data.UpdateAt = time.Now()
 	return m.coll.Update(ctx, data.ID, data)
 }
 
-func (m *localUpdRecordModel) Search(ctx context.Context, cond sharedmodel.UpdRecordListCond) ([]*sharedmodel.UpdRecord, int, error) {
-	var results []*sharedmodel.UpdRecord
+func (m *localUpdRecordModel) Delete(ctx context.Context, id string) error {
+	return m.coll.Delete(ctx, id)
+}
+
+func (m *localUpdRecordModel) Search(ctx context.Context, cond model.UpdRecordListCond) ([]*model.UpdRecordTemplate, int, error) {
+	var results []*model.UpdRecordTemplate
 	err := m.coll.FindAll(ctx, nil, &results)
 	if err != nil {
 		return nil, 0, err
@@ -330,6 +375,87 @@ func (m *localGrayNodesModel) FindOne(ctx context.Context, nodeId, releaseId str
 	return results[0], nil
 }
 
+func (m *localGrayNodesModel) Upsert(ctx context.Context, data *sharedmodel.GrayNode) error {
+	if data.ID == "" {
+		data.ID = primitive.NewObjectID().Hex()
+	}
+	if data.CreateAt.IsZero() {
+		data.CreateAt = time.Now()
+	}
+	return m.coll.Upsert(ctx, data.ID, data)
+}
+
+func (m *localGrayNodesModel) UpsertBulk(ctx context.Context, datas []*sharedmodel.GrayNode) error {
+	for _, data := range datas {
+		if err := m.Upsert(ctx, data); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *localGrayNodesModel) Find(ctx context.Context, releaseID string) ([]sharedmodel.GrayNode, error) {
+	filter := func(doc interface{}) bool {
+		data, _ := json.Marshal(doc)
+		var gn sharedmodel.GrayNode
+		json.Unmarshal(data, &gn)
+		return gn.ReleaseID == releaseID
+	}
+	
+	var results []sharedmodel.GrayNode
+	err := m.coll.FindAll(ctx, filter, &results)
+	return results, err
+}
+
+func (m *localGrayNodesModel) Search(ctx context.Context, cond *sharedmodel.GrayNodesSearchCond) ([]*sharedmodel.GrayNode, string, int, error) {
+	filter := func(doc interface{}) bool {
+		if cond.ReleaseID == "" {
+			return true
+		}
+		data, _ := json.Marshal(doc)
+		var gn sharedmodel.GrayNode
+		json.Unmarshal(data, &gn)
+		return gn.ReleaseID == cond.ReleaseID
+	}
+	
+	var results []*sharedmodel.GrayNode
+	err := m.coll.FindAll(ctx, filter, &results)
+	if err != nil {
+		return nil, "", 0, err
+	}
+	
+	total := len(results)
+	return results, "", total, nil
+}
+
+func (m *localGrayNodesModel) DeletePartNodesInRelease(ctx context.Context, releaseID string, nodeIds []string) error {
+	filter := func(doc interface{}) bool {
+		data, _ := json.Marshal(doc)
+		var gn sharedmodel.GrayNode
+		json.Unmarshal(data, &gn)
+		if gn.ReleaseID != releaseID {
+			return false
+		}
+		for _, nodeId := range nodeIds {
+			if gn.NodeId == nodeId {
+				return true
+			}
+		}
+		return false
+	}
+	
+	var toDelete []*sharedmodel.GrayNode
+	m.coll.FindAll(ctx, filter, &toDelete)
+	for _, gn := range toDelete {
+		m.coll.Delete(ctx, gn.ID)
+	}
+	return nil
+}
+
+func (m *localGrayNodesModel) Drop(ctx context.Context) error {
+	return m.coll.Drop(ctx)
+}
+
 type localNodeReleaseHistoryModel struct {
 	coll *Collection
 }
@@ -351,7 +477,7 @@ func (m *localNodeReleaseHistoryModel) Insert(ctx context.Context, data *sharedm
 	return m.coll.Insert(ctx, data.ID, data)
 }
 
-func (m *localNodeReleaseHistoryModel) Search(ctx context.Context, cond sharedmodel.NodeReleaseHistoryListCond) ([]*sharedmodel.NodeReleaseHistory, int, error) {
+func (m *localNodeReleaseHistoryModel) Search(ctx context.Context, cond *sharedmodel.NodeReleaseHistoryCond) ([]*sharedmodel.NodeReleaseHistory, int, error) {
 	var results []*sharedmodel.NodeReleaseHistory
 	err := m.coll.FindAll(ctx, nil, &results)
 	if err != nil {
@@ -366,6 +492,10 @@ func (m *localNodeReleaseHistoryModel) Search(ctx context.Context, cond sharedmo
 	return results, total, nil
 }
 
+func (m *localNodeReleaseHistoryModel) Drop(ctx context.Context) error {
+	return m.coll.Drop(ctx)
+}
+
 type localNodeJoinModel struct {
 	coll *Collection
 }
@@ -377,10 +507,14 @@ func NewLocalNodeJoinModel(dataDir string) sharedmodel.NodeJoinModel {
 	}
 }
 
-func (m *localNodeJoinModel) Search(ctx context.Context, cond *sharedmodel.NodeSearchCond) ([]*sharedmodel.NodeJoin, error) {
+func (m *localNodeJoinModel) Search(ctx context.Context, cond *sharedmodel.NodeSearchCond) ([]*sharedmodel.NodeJoin, string, int, error) {
 	var results []*sharedmodel.NodeJoin
 	err := m.coll.FindAll(ctx, nil, &results)
-	return results, err
+	if err != nil {
+		return nil, "", 0, err
+	}
+	total := len(results)
+	return results, "", total, nil
 }
 
 func (m *localNodeJoinModel) FindOneByNodeId(ctx context.Context, nodeId string) (*sharedmodel.NodeJoin, error) {
@@ -403,15 +537,8 @@ func (m *localNodeJoinModel) FindOneByNodeId(ctx context.Context, nodeId string)
 }
 
 func (m *localNodeJoinModel) FindNodeIdsByPool(ctx context.Context, nodePool string) ([]string, error) {
-	filter := func(doc interface{}) bool {
-		data, _ := json.Marshal(doc)
-		var nj sharedmodel.NodeJoin
-		json.Unmarshal(data, &nj)
-		return nj.NodePoolId == nodePool
-	}
-	
 	var results []*sharedmodel.NodeJoin
-	err := m.coll.FindAll(ctx, filter, &results)
+	err := m.coll.FindAll(ctx, nil, &results)
 	if err != nil {
 		return nil, err
 	}
@@ -428,5 +555,5 @@ func (m *localNodeJoinModel) FindNodePoolsByNodeId(ctx context.Context, nodeId s
 	if err != nil {
 		return nil, err
 	}
-	return []string{nj.NodePoolId}, nil
+	return []string{nj.NodeId}, nil
 }

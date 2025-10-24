@@ -17,6 +17,14 @@ type NodeReleaseHistoryOperation string
 
 type NodeReleaseFilterChangeMode string
 
+type NodeReleaseHistoryListCond struct {
+	ReleaseIDs []string
+	NodeTypes  []string
+	Apps       []string
+	Page       int
+	Size       int
+}
+
 const (
 	NodeReleaseHistoryOperationCreate       NodeReleaseHistoryOperation = "create"
 	NodeReleaseHistoryOperationContinue     NodeReleaseHistoryOperation = "continue"

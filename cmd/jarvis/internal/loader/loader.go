@@ -4,9 +4,8 @@ import (
 	"context"
 	"sync"
 
+	"hackathon/cmd/jarvis/internal/localstorage"
 	"hackathon/sharedmodel"
-
-	"github.com/zeromicro/go-zero/core/stores/redis"
 )
 
 var (
@@ -16,7 +15,7 @@ var (
 
 type LoaderContext struct {
 	NodeReleaseModel sharedmodel.NodeReleaseModel
-	BizRedis         *redis.Redis
+	BizRedis         *localstorage.LocalRedis
 }
 
 type Loader interface {
