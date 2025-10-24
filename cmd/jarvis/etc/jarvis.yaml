@@ -1,0 +1,12 @@
+Name: jarvis
+Host: 0.0.0.0
+Port: 8080
+
+# Local storage directory (replaces MongoDB and Redis)
+DataDir: ./data
+
+# Optional: Kodo configuration for file storage
+# Kodo:
+#   AccessKey: ""
+#   SecretKey: ""
+#   Bucket: ""
