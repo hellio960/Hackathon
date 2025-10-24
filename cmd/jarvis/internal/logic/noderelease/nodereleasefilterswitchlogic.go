@@ -220,7 +220,7 @@ func (l *NodeReleaseFilterSwitchLogic) calculateTotalCount(req *types.NodeReleas
 	}
 
 	pageParam := sharedmodel.PageParam{Size: 1}
-	pageParam.SetMarkSort("nodeStaticInfo.sortId", sharedmodel.SortTypeAsc)
+	pageParam.SetMarkSort("_id", sharedmodel.SortTypeAsc)
 
 	pageParam.SetMark("")
 	cond := &sharedmodel.NodeSearchCond{
@@ -230,10 +230,9 @@ func (l *NodeReleaseFilterSwitchLogic) calculateTotalCount(req *types.NodeReleas
 		CustomerIDs: req.ByFilter.CustomerIds,
 		Stage:       strings.Join(req.ByFilter.Stages, ","), // todo 注意加索引, 带上sortId
 		NodeType:    nodeType.String(),
-		FieldsCond:  sharedmodel.FieldsCond{"_id", "nodeStaticInfo.sortId"},
 	}
 
-	_, _, total, err := l.svcCtx.NodeJoin.SearchV2(l.ctx, cond)
+	_, _, total, err := l.svcCtx.NodeJoinModel.Search(l.ctx, cond)
 	if err != nil {
 		return 0, err
 	}

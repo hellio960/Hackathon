@@ -15,16 +15,8 @@ type (
 	DiskSearchType = string
 )
 
-var (
-	searchHDDType       DiskSearchType = "hdd"
-	searchSSDType       DiskSearchType = "ssd"
-	searchSystemType    DiskSearchType = "system"
-	searchDiskTotalType DiskSearchType = "total"
-)
-
 type NodeSearchCond struct {
 	PageParam
-	FieldsCond
 
 	DeviceType  []string
 	State       string   // 网络状态

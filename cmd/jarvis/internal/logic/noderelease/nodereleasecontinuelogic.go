@@ -375,7 +375,7 @@ func (l *NodeReleaseContinueLogic) addAllowNodes2RedisByFilter(req *types.NodeRe
 	}
 
 	pageParam := sharedmodel.PageParam{Size: 500}
-	pageParam.SetMarkSort("nodeStaticInfo.sortId", sharedmodel.SortTypeAsc)
+	pageParam.SetMarkSort("_id", sharedmodel.SortTypeAsc)
 	for {
 		pageParam.SetMark(mark)
 		cond := &sharedmodel.NodeSearchCond{
@@ -385,11 +385,10 @@ func (l *NodeReleaseContinueLogic) addAllowNodes2RedisByFilter(req *types.NodeRe
 			CustomerIDs: releasePlan.GrayPolicy.Filter.CustomerIds,
 			Stage:       strings.Join(releasePlan.GrayPolicy.Filter.Stages, ","),
 			NodeType:    "all", // 查询条件已经包含devType, nodeType可忽略, 根据当前search接口实现, 此处填all, 实际查询时将不涉及nodeType字段, 减小索引压力
-			FieldsCond:  sharedmodel.FieldsCond{"_id", "nodeStaticInfo.sortId"},
 			NoCount:     true,
 		}
 
-		nodeJoins, markID, _, err := l.svcCtx.NodeJoin.SearchV2(l.ctx, cond)
+		nodeJoins, markID, _, err := l.svcCtx.NodeJoinModel.Search(l.ctx, cond)
 		if err != nil {
 			return err
 		}
@@ -403,14 +402,14 @@ func (l *NodeReleaseContinueLogic) addAllowNodes2RedisByFilter(req *types.NodeRe
 			var nodeIds []string
 			for _, nodeJoin := range nodeJoins {
 				// 检查节点是否已被其它任务占用
-				tips, curUsed, err := noderelease.EnsureNodesNotInOtherTasks(l.ctx, l.allowNodesTopicCache, l.svcCtx.AllowAppsModel, l.svcCtx.BizRedis, l.nodeIdPoolCache, releasePlan, processingTasks, []string{nodeJoin.Id})
+				tips, curUsed, err := noderelease.EnsureNodesNotInOtherTasks(l.ctx, l.allowNodesTopicCache, l.svcCtx.AllowAppsModel, l.svcCtx.BizRedis, l.nodeIdPoolCache, releasePlan, processingTasks, []string{nodeJoin.NodeId})
 				if err != nil || len(tips) > 0 {
 					continue
 				}
 				if curUsed {
 					continue
 				}
-				nodeIds = append(nodeIds, nodeJoin.Id)
+				nodeIds = append(nodeIds, nodeJoin.NodeId)
 			}
 
 			_, err := noderelease.AddAllowNodes(l.ctx, l.svcCtx.BizRedis, topic, nodeIds)
@@ -422,14 +421,14 @@ func (l *NodeReleaseContinueLogic) addAllowNodes2RedisByFilter(req *types.NodeRe
 			var nodeIds []string
 			for i := int64(0); i < leftGrayCount; i++ {
 				// 检查节点是否已被其它任务占用
-				tips, curUsed, err := noderelease.EnsureNodesNotInOtherTasks(l.ctx, l.allowNodesTopicCache, l.svcCtx.AllowAppsModel, l.svcCtx.BizRedis, l.nodeIdPoolCache, releasePlan, processingTasks, []string{nodeJoins[i].Id})
+				tips, curUsed, err := noderelease.EnsureNodesNotInOtherTasks(l.ctx, l.allowNodesTopicCache, l.svcCtx.AllowAppsModel, l.svcCtx.BizRedis, l.nodeIdPoolCache, releasePlan, processingTasks, []string{nodeJoins[i].NodeId})
 				if err != nil || len(tips) > 0 {
 					continue
 				}
 				if curUsed {
 					continue
 				}
-				nodeIds = append(nodeIds, nodeJoins[i].Id)
+				nodeIds = append(nodeIds, nodeJoins[i].NodeId)
 				mark = nodeJoins[i].Id
 			}
 
