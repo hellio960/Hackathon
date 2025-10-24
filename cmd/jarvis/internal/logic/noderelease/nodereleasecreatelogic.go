@@ -243,7 +243,7 @@ func (l *NodeReleaseCreateLogic) addGrayNodesByFilter(req *types.NodeReleaseCrea
 	// 先取首页, 获取总数
 	var mark string
 	pageParam := sharedmodel.PageParam{Size: 100}
-	pageParam.SetMarkSort("nodeStaticInfo.sortId", sharedmodel.SortTypeAsc)
+	pageParam.SetMarkSort("_id", sharedmodel.SortTypeAsc)
 
 	// 计算本次需要添加的灰度节点数
 	var targetGrayCount int
@@ -258,7 +258,6 @@ func (l *NodeReleaseCreateLogic) addGrayNodesByFilter(req *types.NodeReleaseCrea
 			CustomerIDs: req.GrayPolicy.Filter.CustomerIds,
 			Stage:       strings.Join(req.GrayPolicy.Filter.Stages, ","),
 			NodeType:    "all", // 查询条件已经包含devType, nodeType可忽略, 根据当前search接口实现, 此处填all, 实际查询时将不涉及nodeType字段, 减小索引压力
-			FieldsCond:  sharedmodel.FieldsCond{"_id", "nodeStaticInfo.sortId"},
 		}
 
 		// 如果已获取到节点总数, 无须再获取
@@ -266,7 +265,7 @@ func (l *NodeReleaseCreateLogic) addGrayNodesByFilter(req *types.NodeReleaseCrea
 			cond.NoCount = true
 		}
 
-		nodeJoins, markID, total, err := l.svcCtx.NodeJoin.SearchV2(l.ctx, cond)
+		nodeJoins, markID, total, err := l.svcCtx.NodeJoinModel.Search(l.ctx, cond)
 		if err != nil {
 			return 0, 0, "", err
 		}
@@ -289,7 +288,7 @@ func (l *NodeReleaseCreateLogic) addGrayNodesByFilter(req *types.NodeReleaseCrea
 			// 待灰度节点数大于本批次节点, 先把这批节点加入灰度
 			var nodeIds []string
 			for _, nodeJoin := range nodeJoins {
-				nodeIds = append(nodeIds, nodeJoin.Id)
+				nodeIds = append(nodeIds, nodeJoin.NodeId)
 			}
 
 			if len(nodeIds) > 0 {
@@ -302,7 +301,7 @@ func (l *NodeReleaseCreateLogic) addGrayNodesByFilter(req *types.NodeReleaseCrea
 			// 待灰度节点数小于本批次节点, 把本批次部分节点加入灰度
 			var nodeIds []string
 			for i := 0; i < leftGrayCount; i++ {
-				nodeIds = append(nodeIds, nodeJoins[i].Id)
+				nodeIds = append(nodeIds, nodeJoins[i].NodeId)
 				mark = nodeJoins[i].Id
 			}
 

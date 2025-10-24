@@ -43,7 +43,7 @@ type (
 		Days  int       `bson:"days,omitempty"  json:"days,omitempty"`  // 天数
 	}
 	FieldsCond []string
-	TimeCond struct {
+	TimeCond   struct {
 		Start time.Time
 		End   time.Time
 	}
@@ -160,9 +160,8 @@ func (page PageParam) IsMarkFirstPage() bool {
 func (page *PageParam) SetMarkSort(key string, sortType SortType) {
 	page.MarkSortKey = key
 	page.MarkSortType = sortType
-	return
 }
+
 func (page *PageParam) SetMark(value interface{}) {
 	page.Mark = value
-	return
 }

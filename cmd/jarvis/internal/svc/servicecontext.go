@@ -13,12 +13,12 @@ type ServiceContext struct {
 	BizRedis *redis.Redis
 
 	NodeReleaseModel        sharedmodel.NodeReleaseModel
-	AllowAppsModel          model.AllowAppsModel
+	AllowAppsModel          sharedmodel.AllowAppsModel
 	SysParamModel           model.SysParamModel
 	UpdRecordModel          model.UpdRecordModel
 	GrayNodesModel          sharedmodel.GrayNodesModel
 	NodeReleaseHistoryModel sharedmodel.NodeReleaseHistoryModel
-	NodeJoin                model.NodeJoinModel
+	NodeJoinModel           sharedmodel.NodeJoinModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -30,11 +30,11 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		BizRedis: bizRedis,
 
 		NodeReleaseModel:        sharedmodel.NewNodeReleaseModel(c.Mongo.Url, c.Mongo.DB),
-		AllowAppsModel:          model.NewAllowAppsModel(c.Mongo.Url, c.Mongo.DB, c.CacheConfig),
+		AllowAppsModel:          sharedmodel.NewAllowAppsModel(c.Mongo.Url, c.Mongo.DB, c.CacheConfig),
 		SysParamModel:           model.NewSysParamModel(c.Mongo.Url, c.Mongo.DB, c.CacheConfig),
 		UpdRecordModel:          model.NewUpdRecordModel(c.Mongo.Url, c.Mongo.DB, c.CacheConfig),
 		GrayNodesModel:          sharedmodel.NewGrayNodesModel(c.Mongo.Url, c.Mongo.DB),
 		NodeReleaseHistoryModel: sharedmodel.NewNodeReleaseHistoryModel(c.Mongo.Url, c.Mongo.DB),
-		NodeJoin:                model.NewNodeJoinModel(c.Mongo.Url, c.Mongo.DB, c.CacheConfig),
+		NodeJoinModel:           sharedmodel.NewNodeJoinModel(c.Mongo.Url, c.Mongo.DB, c.CacheConfig),
 	}
 }
