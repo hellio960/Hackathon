@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/core/stores/redis"
 
+	"hackathon/cmd/jarvis/internal/localstorage"
 	"hackathon/common/device"
 	"hackathon/sharedmodel"
 )
@@ -116,7 +116,7 @@ func GetAppConfig(ctx context.Context, sysParamModel sharedmodel.SysParamModel, 
 }
 
 // 将当前灰度配置更新为正式版本, 用于全量发布任务
-func CompleteAppConfig(ctx context.Context, sysParamModel sharedmodel.SysParamModel, release *sharedmodel.NodeRelease, bizRedis *redis.Redis, defaultTopic string) (prevMain, afterMain *sharedmodel.AppConfig, err error) {
+func CompleteAppConfig(ctx context.Context, sysParamModel sharedmodel.SysParamModel, release *sharedmodel.NodeRelease, bizRedis *localstorage.LocalRedis, defaultTopic string) (prevMain, afterMain *sharedmodel.AppConfig, err error) {
 	devConfigName := GetAppConfigName(device.DevType(release.DeviceType))
 	if devConfigName == "" {
 		return nil, nil, fmt.Errorf("invalid devType: %s", release.DeviceType)

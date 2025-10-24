@@ -1,16 +1,15 @@
 package svc
 
 import (
-	"github.com/zeromicro/go-zero/core/stores/redis"
-
 	"hackathon/cmd/jarvis/internal/config"
+	"hackathon/cmd/jarvis/internal/localstorage"
 	"hackathon/cmd/jarvis/internal/model"
 	"hackathon/sharedmodel"
 )
 
 type ServiceContext struct {
 	Config   config.Config
-	BizRedis *redis.Redis
+	BizRedis *localstorage.LocalRedis
 
 	NodeReleaseModel        sharedmodel.NodeReleaseModel
 	AllowAppsModel          sharedmodel.AllowAppsModel
@@ -22,19 +21,22 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
-	bizRedis := c.BizRedisConfig.NewRedis()
+	dataDir := c.DataDir
+	if dataDir == "" {
+		dataDir = "./data"
+	}
 
 	return &ServiceContext{
 		Config: c,
 
-		BizRedis: bizRedis,
+		BizRedis: localstorage.NewLocalRedis(dataDir),
 
-		NodeReleaseModel:        sharedmodel.NewNodeReleaseModel(c.Mongo.Url, c.Mongo.DB),
-		AllowAppsModel:          sharedmodel.NewAllowAppsModel(c.Mongo.Url, c.Mongo.DB, c.CacheConfig),
-		SysParamModel:           model.NewSysParamModel(c.Mongo.Url, c.Mongo.DB, c.CacheConfig),
-		UpdRecordModel:          model.NewUpdRecordModel(c.Mongo.Url, c.Mongo.DB, c.CacheConfig),
-		GrayNodesModel:          sharedmodel.NewGrayNodesModel(c.Mongo.Url, c.Mongo.DB),
-		NodeReleaseHistoryModel: sharedmodel.NewNodeReleaseHistoryModel(c.Mongo.Url, c.Mongo.DB),
-		NodeJoinModel:           sharedmodel.NewNodeJoinModel(c.Mongo.Url, c.Mongo.DB, c.CacheConfig),
+		NodeReleaseModel:        localstorage.NewLocalNodeReleaseModel(dataDir),
+		AllowAppsModel:          localstorage.NewLocalAllowAppsModel(dataDir),
+		SysParamModel:           localstorage.NewLocalSysParamModel(dataDir),
+		UpdRecordModel:          localstorage.NewLocalUpdRecordModel(dataDir),
+		GrayNodesModel:          localstorage.NewLocalGrayNodesModel(dataDir),
+		NodeReleaseHistoryModel: localstorage.NewLocalNodeReleaseHistoryModel(dataDir),
+		NodeJoinModel:           localstorage.NewLocalNodeJoinModel(dataDir),
 	}
 }

@@ -9,8 +9,8 @@ import (
 
 	"github.com/zeromicro/go-zero/core/collection"
 	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/core/stores/redis"
 
+	"hackathon/cmd/jarvis/internal/localstorage"
 	"hackathon/common/device"
 	"hackathon/common/errorx"
 	"hackathon/common/utils"
@@ -81,7 +81,7 @@ func GetAllowNodesTopic(ctx context.Context, cache AllowNodesTopicCache, allowAp
 	return topic, nil
 }
 
-func AddAllowNodes(ctx context.Context, bizRedis *redis.Redis, topic string, nodeIds []string) (addCount int, err error) {
+func AddAllowNodes(ctx context.Context, bizRedis *localstorage.LocalRedis, topic string, nodeIds []string) (addCount int, err error) {
 
 	if bizRedis == nil {
 		return 0, errors.New("bizRedis is nil")
@@ -109,7 +109,7 @@ func AddAllowNodes(ctx context.Context, bizRedis *redis.Redis, topic string, nod
 	return addCount, nil
 }
 
-func RemoveAllowNodes(ctx context.Context, bizRedis *redis.Redis, topic string, nodeIds []string) (removeCount int, err error) {
+func RemoveAllowNodes(ctx context.Context, bizRedis *localstorage.LocalRedis, topic string, nodeIds []string) (removeCount int, err error) {
 	if bizRedis == nil {
 		return 0, errors.New("bizRedis is nil")
 	}
@@ -136,7 +136,7 @@ func RemoveAllowNodes(ctx context.Context, bizRedis *redis.Redis, topic string, 
 	return removeCount, nil
 }
 
-func GetAllowNodes(ctx context.Context, bizRedis *redis.Redis, topic string) (nodes []string, err error) {
+func GetAllowNodes(ctx context.Context, bizRedis *localstorage.LocalRedis, topic string) (nodes []string, err error) {
 	if bizRedis == nil {
 		return nil, errors.New("bizRedis is nil")
 	}
@@ -172,7 +172,7 @@ func GetAllowNodes(ctx context.Context, bizRedis *redis.Redis, topic string) (no
 	return nodes, nil
 }
 
-func GetAllowNodesCount(ctx context.Context, bizRedis *redis.Redis, topic string) (count int64, err error) {
+func GetAllowNodesCount(ctx context.Context, bizRedis *localstorage.LocalRedis, topic string) (count int64, err error) {
 	if bizRedis == nil {
 		return 0, errors.New("bizRedis is nil")
 	}
@@ -184,7 +184,7 @@ func GetAllowNodesCount(ctx context.Context, bizRedis *redis.Redis, topic string
 	return count, nil
 }
 
-func GetAllowNodesWithLimit(ctx context.Context, bizRedis *redis.Redis, topic string, limit int) (nodes []string, err error) {
+func GetAllowNodesWithLimit(ctx context.Context, bizRedis *localstorage.LocalRedis, topic string, limit int) (nodes []string, err error) {
 
 	if bizRedis == nil {
 		return nil, errors.New("bizRedis is nil")
@@ -232,7 +232,7 @@ func GetAllowNodesWithLimit(ctx context.Context, bizRedis *redis.Redis, topic st
 	return nodes, nil
 }
 
-func ClearAllowNodes(ctx context.Context, bizRedis *redis.Redis, topic string) (err error) {
+func ClearAllowNodes(ctx context.Context, bizRedis *localstorage.LocalRedis, topic string) (err error) {
 
 	if bizRedis == nil {
 		return errors.New("bizRedis is nil")
@@ -249,7 +249,7 @@ func ClearAllowNodes(ctx context.Context, bizRedis *redis.Redis, topic string) (
 	return nil
 }
 
-func CheckNodeIdIsAllowed(ctx context.Context, bizRedis *redis.Redis, topic string, nodeId string) (exist bool, err error) {
+func CheckNodeIdIsAllowed(ctx context.Context, bizRedis *localstorage.LocalRedis, topic string, nodeId string) (exist bool, err error) {
 	if bizRedis == nil {
 		return false, errors.New("bizRedis is nil")
 	}
@@ -260,7 +260,7 @@ func CheckNodeIdIsAllowed(ctx context.Context, bizRedis *redis.Redis, topic stri
 	return bizRedis.SismemberCtx(ctx, topic, nodeId)
 }
 
-func SaveAllowNodes(ctx context.Context, grayNodesModel sharedmodel.GrayNodesModel, bizRedis *redis.Redis, topic string, releaseID string) (err error) {
+func SaveAllowNodes(ctx context.Context, grayNodesModel sharedmodel.GrayNodesModel, bizRedis *localstorage.LocalRedis, topic string, releaseID string) (err error) {
 	if bizRedis == nil {
 		return errors.New("bizRedis is nil")
 	}
@@ -300,7 +300,7 @@ func SaveAllowNodes(ctx context.Context, grayNodesModel sharedmodel.GrayNodesMod
 	return nil
 }
 
-func EnsureNodesNotInOtherTasks(ctx context.Context, cache AllowNodesTopicCache, allowAppsModel sharedmodel.AllowAppsModel, bizRedis *redis.Redis, nodeIdPoolCache map[string]map[string]struct{}, release *sharedmodel.NodeRelease, processingTasks []*sharedmodel.NodeRelease, nodeIds []string) (otherTaskTips []string, curUsed bool, err error) {
+func EnsureNodesNotInOtherTasks(ctx context.Context, cache AllowNodesTopicCache, allowAppsModel sharedmodel.AllowAppsModel, bizRedis *localstorage.LocalRedis, nodeIdPoolCache map[string]map[string]struct{}, release *sharedmodel.NodeRelease, processingTasks []*sharedmodel.NodeRelease, nodeIds []string) (otherTaskTips []string, curUsed bool, err error) {
 	if bizRedis == nil || nodeIdPoolCache == nil {
 		return nil, false, errorx.NewDefaultError("redis or cache invalid")
 	}
