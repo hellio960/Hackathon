@@ -36,9 +36,9 @@ build:
 
 build-all: build
 	@echo "==> 编译所有示例程序..."
-	go build -o bin/k8s_deployment examples/k8s_deployment.go
-	go build -o bin/physical_deployment examples/physical_deployment.go
-	go build -o bin/parallel_deployment examples/parallel_deployment.go
+	go build -o bin/k8s_deployment examples/k8s_deployment/main.go
+	go build -o bin/physical_deployment examples/physical_deployment/main.go
+	go build -o bin/parallel_deployment examples/parallel_deployment/main.go
 	@echo "所有程序编译完成"
 
 test:

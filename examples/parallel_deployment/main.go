@@ -50,7 +50,7 @@ func main() {
 			},
 			Replicas: 5,
 		}
-		
+
 		fmt.Println("Starting deployment of user-service v1.2.0...")
 		err := orch.Deploy(ctx, config)
 		if err != nil {
@@ -84,7 +84,7 @@ func main() {
 			},
 			Replicas: 5,
 		}
-		
+
 		fmt.Println("Starting deployment of user-service v1.3.0 (parallel)...")
 		err := orch.Deploy(ctx, config)
 		if err != nil {
