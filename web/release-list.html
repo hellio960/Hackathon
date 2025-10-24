@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>节点发布</title>
+    <link rel="stylesheet" href="css/release-list.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1>节点发布</h1>
+            <div class="tabs">
+                <div class="tab active">发布任务</div>
+                <div class="tab" onclick="window.location.href='component-management.html'">组件管理</div>
+            </div>
+        </div>
+
+        <!-- 搜索区域 -->
+        <div class="search-section">
+            <div class="search-row">
+                <div class="search-item">
+                    <input type="text" id="releaseId" placeholder="任务ID" class="search-input">
+                </div>
+                <div class="search-item">
+                    <select id="deviceType" class="search-select">
+                        <option value="">设备类型</option>
+                        <option value="node">node</option>
+                        <option value="smallBox">smallBox</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <select id="releaseType" class="search-select">
+                        <option value="">发布类型</option>
+                        <option value="formal">正式发布</option>
+                        <option value="beta">功能验证</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <input type="text" id="appName" placeholder="组件" class="search-input">
+                </div>
+                <div class="search-item">
+                    <select id="state" class="search-select">
+                        <option value="">发布状态</option>
+                        <option value="created">已创建</option>
+                        <option value="running">进行中</option>
+                        <option value="completed">完成</option>
+                        <option value="paused">暂停</option>
+                        <option value="rollback">回滚</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <button id="searchBtn" class="search-btn">搜索</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作按钮区域 -->
+        <div class="action-section">
+            <button class="btn btn-primary">新建</button>
+            <button class="btn btn-secondary">创建发布</button>
+        </div>
+
+        <!-- 表格区域 -->
+        <div class="table-section">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>任务ID</th>
+                        <th>组件</th>
+                        <th>设备类型</th>
+                        <th>发布类型</th>
+                        <th>发布状态</th>
+                        <th>创建人</th>
+                        <th>发布时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- 数据将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页区域 -->
+        <div class="pagination-section">
+            <div class="pagination-info">
+                共 <span id="totalCount">0</span> 条
+            </div>
+            <div class="pagination">
+                <button id="prevPage" class="page-btn" disabled>上一页</button>
+                <div class="page-numbers" id="pageNumbers">
+                    <!-- 页码将通过JavaScript动态生成 -->
+                </div>
+                <button id="nextPage" class="page-btn">下一页</button>
+                <span class="page-info">共 <span id="totalPages">0</span> 页</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div id="loading" class="loading hidden">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中...</div>
+    </div>
+
+    <script src="js/release-list.js"></script>
+</body>
+</html>

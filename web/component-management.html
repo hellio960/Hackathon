@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>组件管理</title>
+    <link rel="stylesheet" href="css/component-management.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1>节点发布</h1>
+            <div class="tabs">
+                <div class="tab" onclick="window.location.href='release-list.html'">发布任务</div>
+                <div class="tab active">组件管理</div>
+            </div>
+        </div>
+
+        <!-- 搜索区域 -->
+        <div class="search-section">
+            <div class="search-row">
+                <div class="search-item">
+                    <input type="text" id="appName" placeholder="组件名" class="search-input">
+                </div>
+                <div class="search-item">
+                    <select id="nodeType" class="search-select">
+                        <option value="">设备类型</option>
+                        <option value="node">大节点</option>
+                        <option value="smallBox">小盒子</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <button id="searchBtn" class="search-btn">搜索</button>
+                </div>
+                <div class="search-item" style="margin-left: auto;">
+                    <button id="addComponentBtn" class="btn btn-primary">新增组件</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 表格区域 -->
+        <div class="table-section">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>组件名</th>
+                        <th>设备类型</th>
+                        <th>存放路径</th>
+                        <th>描述</th>
+                        <th>操作人</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- 数据将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页区域 -->
+        <div class="pagination-section">
+            <div class="pagination-info">
+                共 <span id="totalCount">0</span> 条
+            </div>
+            <div class="pagination">
+                <button id="prevPage" class="page-btn" disabled>上一页</button>
+                <div class="page-numbers" id="pageNumbers">
+                    <!-- 页码将通过JavaScript动态生成 -->
+                </div>
+                <button id="nextPage" class="page-btn">下一页</button>
+                <span class="page-info">共 <span id="totalPages">0</span> 页</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div id="loading" class="loading hidden">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中...</div>
+    </div>
+
+    <!-- 新增/编辑组件弹窗 -->
+    <div id="componentModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">新增组件</h3>
+                <button id="closeModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="componentForm">
+                    <div class="form-group">
+                        <label for="componentName">组件名 <span class="required">*</span></label>
+                        <input type="text" id="componentName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="componentNodeTypes">设备类型 <span class="required">*</span></label>
+                        <div class="multi-select-container">
+                            <div class="multi-select-display" id="nodeTypeDisplay">
+                                <span class="placeholder">请选择设备类型</span>
+                                <span class="arrow">▼</span>
+                            </div>
+                            <div class="multi-select-dropdown" id="nodeTypeDropdown">
+                                <div class="multi-select-option" data-value="node">
+                                    <input type="checkbox" id="node-option" value="node">
+                                    <label for="node-option">大节点</label>
+                                    <span class="checkmark">✓</span>
+                                </div>
+                                <div class="multi-select-option" data-value="smallBox">
+                                    <input type="checkbox" id="smallbox-option" value="smallBox">
+                                    <label for="smallbox-option">小盒子</label>
+                                    <span class="checkmark">✓</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="componentPath">存放路径 <span class="required">*</span></label>
+                        <input type="text" id="componentPath" name="path" required placeholder="kodo中的存放路径">
+                    </div>
+                    <div class="form-group">
+                        <label for="componentDesc">描述</label>
+                        <textarea id="componentDesc" name="desc" rows="3" placeholder="组件描述信息"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelBtn" class="btn btn-secondary">取消</button>
+                <button id="saveBtn" class="btn btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认删除弹窗 -->
+    <div id="deleteModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>确认删除</h3>
+                <button id="closeDeleteModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除组件 "<span id="deleteComponentName"></span>" 吗？</p>
+                <p class="warning-text">删除后不可恢复，请谨慎操作。</p>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelDeleteBtn" class="btn btn-secondary">取消</button>
+                <button id="confirmDeleteBtn" class="btn btn-danger">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/component-management.js"></script>
+</body>
+</html>

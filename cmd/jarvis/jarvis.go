@@ -13,7 +13,7 @@ import (
 	"hackathon/cmd/jarvis/internal/svc"
 )
 
-var configFile = flag.String("f", "etc/jarvis-api.yaml", "the config file")
+var configFile = flag.String("f", "etc/jarvis.yaml", "the config file")
 
 func main() {
 	flag.Parse()

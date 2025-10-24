@@ -1,0 +1,14 @@
+Name: jarvis
+Host: 0.0.0.0
+Port: 8100
+Mongo:
+  Url: mongodb://localhost:27017/jarvis
+BizRedisConfig:
+  Host: 127.0.0.1:6379
+Kodo:
+  AccessKey: ""
+  SecretKey: ""
+  Bucket: ""
+CacheConfig:
+  - Host: 127.0.0.1:6379
+    Type: node
