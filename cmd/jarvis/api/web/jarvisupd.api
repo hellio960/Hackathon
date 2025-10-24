@@ -1,0 +1,103 @@
+syntax = "v1"
+
+info(
+	title: "jarvis jarvisupd"
+	desc: "jarvisupd API"
+	author: "PCDN team"
+	version: "v1"
+)
+
+type (
+	GetJarvisUpdConfReq {
+		NodeID  string `path:"nodeId"`                   //节点id
+		DevType string `form:"devType,default=jarvis.A"` //设备类型
+	}
+
+	PutJarvisUpdConfReq {
+		ClientVer string        `json:"clientVer"`
+		NodeType  string        `json:"nodeType"`                 //节点类型(大节点|小盒子)
+		DevType   string        `json:"devType,default=jarvis.A"` //设备类型
+		Name      string        `json:"name"`
+		OprType   string        `json:"oprType"`
+		UpdConf   JarvisUpdConf `json:"updConf"`
+	}
+
+	JarvisUpdConfReq {
+		DevType string `form:"devType,default=jarvis.A"` //设备类型
+	}
+
+	JarvisUpdConf {
+		Name         string           `json:"name"`
+		Apps         map[string]*Apps `json:"apps"`
+		TTL          int              `json:"ttl"`                   // 更新间隔
+		UpdTimeRange *TimeRange       `json:"updTimeRange,optional"` // 升级时间段
+		Timestamp    int64            `json:"timestamp,optional"`    // 服务器时间戳
+	}
+
+	TimeRange {
+		Start string `json:"start"`
+		End   string `json:"end"`
+	}
+
+	Apps {
+		Main  *AppUpdInfo `json:"main,omitempty,optional"`
+		Alter *AppUpdInfo `json:"alter,omitempty,optional"`
+	}
+
+	AppUpdInfo {
+		URL       string   `json:"url"`           // 下载包的地址
+		Type      string   `json:"type"`          // 下载包的类型，包括："zipped"（压缩包），"executable"（可执行文件，默认）
+		CMD       string   `json:"cmd"`           // 执行程序的路径，默认是 ""（对于 url 直接是可执行文件），对于压缩包，是一个相对于压缩包根目录的一个路径
+		Args      []string `json:"args,optional"` // 执行程序的参数列表
+		DIR       string   `json:"dir"`           // 工作目录，默认是执行程序所在目录
+		HealthUrl string   `json:"healthUrl"`     // 服务健康度的url，若为空，则根据supervisor status来获取
+		MD5       string   `json:"md5"`           // tar或executable md5校验码
+	}
+
+	GetAllowNodesReq {
+		NodeType string `form:"nodeType,optional"` //节点类型(node|smallBox)
+		App      string `form:"app"`
+	}
+
+	AllowNodeInfo {
+		Info []AllowNode `json:"info"`
+	}
+
+	AllowNode {
+		App     string   `json:"app,optional"`     // 应用名称
+		NodeIds []string `json:"nodeIds,optional"` // 节点列表
+	}
+
+	PutAllowNodeReq {
+		NodeType  string   `json:"nodeType"` //节点类型(node|smallBox)
+		ClientVer string   `json:"clientVer"`
+		App       string   `json:"app,optional"`
+		NodeIds   []string `json:"nodeIds,optional"`
+	}
+)
+
+@server (
+	group: jarivsupd
+)
+
+service jarvis-api {
+	@doc "获取jarvisupd配置"
+	@handler GetJarvisUpdConf
+	get /v1/jarvisconf(JarvisUpdConfReq) returns (JarvisUpdConf)
+
+	@doc "获取节点的jarvisupd配置"
+	@handler GetNodeJarvisUpdConf
+	get /v1/jarvisconf/:nodeId (GetJarvisUpdConfReq) returns (JarvisUpdConf)
+
+	@doc "更新jarvisupd配置"
+	@handler UpdateJarvisUpdConf
+	put /v1/jarvisconf (PutJarvisUpdConfReq)
+
+	@doc "更新发布白名单"
+	@handler UpdateAllowNodes
+	put /v1/allow_nodes (PutAllowNodeReq)
+
+	@doc "获取发布白名单"
+	@handler GetAllowNodes
+	get /v1/allow_nodes (GetAllowNodesReq) returns (AllowNodeInfo)
+}

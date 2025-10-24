@@ -1,0 +1,266 @@
+syntax = "v1"
+
+info(
+	title: "node release"
+	desc: "node release API"
+	author: "PCDN team"
+	version: "v1"
+)
+
+type (
+	NodeReleaseCreateReq {
+		DevType     string     `json:"devType"`                          //设备类型
+		AppName     string     `json:"appName"`                          //应用名
+		Describe    string     `json:"describe"`                         //功能发布描述
+		ReleaseType string     `json:"releaseType,options=formal|beta"`  // 发布类型
+		OpType      string     `json:"opType,options=add|update|delete"` // 操作类型, 新增|升级|移除组件
+		AppConfig   *AppConfig `json:"appConfig,optional"`               //灰度配置
+		GrayPolicy  GrayPolicy `json:"grayPolicy"`                       //灰度策略
+	}
+
+	AppConfig {
+		PackageUrl  string   `json:"url"`                // 包名
+		PackageType string   `json:"type"`               // 包类型
+		Cmd         string   `json:"cmd"`                // 程序启动名
+		Args        []string `json:"args,optional"`      // 应用启动参数
+		WorkDir     string   `json:"dir"`                // 工作目录
+		HealthUrl   string   `json:"healthUrl,optional"` // 保活url（目前不使用）
+		PackageMD5  string   `json:"md5"`                // 包md5
+	}
+
+	GrayPolicy {
+		NodeIds    []string    `json:"nodeIds,optional"`  // 节点id
+		Filter     *GrayFilter `json:"filter,optional"`   // 灰度节点过滤规则
+		Percentage int         `json:"percentage"`        // 当前灰度比例
+		StatInfo   StatInfo    `json:"statInfo,optional"` // 灰度节点统计
+	}
+
+	StatInfo {
+		TotalCount int `json:"totalCount"` // 当前策略匹配的的节点总数
+	}
+
+	GrayFilter {
+		DevType     string   `json:"devType,optional"`              // 设备类型
+		CustomerIds []uint32 `json:"customerIds,optional"`          // 当前业务
+		Status      string   `json:"status,options=online|outline"` // 节点状态, online/outline
+		Stages      []string `json:"stages"`                        // 节点阶段
+	}
+
+	NodeReleaseContinueReq {
+		ReleaseID  string   `path:"releaseID"`         // 灰度任务id
+		AddNodes   []string `json:"addNodes,optional"` // 新增灰度节点
+		DelNodes   []string `json:"delNodes,optional"` // 删除指定节点
+		Percentage int      `json:"percentage"`        // 更新灰度比例
+	}
+
+	NodeReleaseFilterSwitchReq {
+		ReleaseID string      `path:"releaseID"`          // 灰度任务id
+		ByNodeIds bool        `json:"byNodeIds,optional"` // 指定节点进行灰度
+		ByFilter  *GrayFilter `json:"byFilter,optional"`  // 按规则过滤灰度节点
+	}
+
+	NodeReleaseRollbackReq {
+		ReleaseID string `path:"releaseID"` // 发布任务id
+	}
+
+	NodeReleaseListReq {
+		ReleaseIDs   []string `json:"releaseIds,optional"`   // 任务ID
+		App          string   `json:"app,optional"`          // 应用名
+		DevTypes     []string `json:"devTypes,optional"`     // 设备类型
+		ReleaseTypes []string `json:"releaseTypes,optional"` // 发布类型
+		States       []string `json:"states,optional"`       // 发布状态
+		Page         int      `json:"page"`
+		Size         int      `json:"size"`
+	}
+
+	NodeReleaseListResp {
+		Items []NodeReleaseBrief `json:"items"` // 发布任务
+		Total int                `json:"total"` // 总数
+	}
+
+	NodeReleaseBrief {
+		ID          string `json:"id"`          // 任务id
+		App         string `json:"app"`         // 应用名
+		DeviceType  string `json:"deviceType"`  // 设备类型
+		ReleaseType string `json:"releaseType"` // 发布类型 (正式发布/功能验证)
+		State       string `json:"state"`       // 发布状态（已创建,进行中,完成，暂停，回滚）
+		Operator    string `json:"operator"`    // 操作人
+		CreateAt    int64  `json:"createAt"`    // 开始发布时间
+	}
+
+	NodeReleaseDetailReq {
+		ReleaseId string `path:"releaseID"` // 任务id
+	}
+
+	NodeReleaseDetailResp {
+		NodeReleaseDetail
+	}
+
+	NodeReleaseDetail {
+		ID              string     `json:"id"`              // 任务id
+		App             string     `json:"app"`             // 应用名
+		DeviceType      string     `json:"deviceType"`      // 节点类型
+		ReleaseType     string     `json:"releaseType"`     // 发布类型 (正式发布/功能验证)
+		OpType          string     `json:"opType"`          // 操作类型(新增组件|升级组件|移除组件)
+		MainConfig      *AppConfig `json:"mainConfig"`      // 当前版本配置
+		AlterConfig     *AppConfig `json:"alterConfig"`     // 灰度版本配置
+		GrayPolicy      GrayPolicy `json:"grayPolicy"`      // 匹配策略
+		AllowNodes      []string   `json:"allowNodes"`      // 当前灰度中节点, 默认展示最多100条
+		AllowNodesTotal int        `json:"allowNodesTotal"` // 当前灰度节点总数
+		State           string     `json:"state"`           // 发布状态（已创建,进行中,完成，暂停，回滚）
+		RollbackAllowed bool       `json:"rollbackAllowed"` // 是否允许回滚
+		Operator        string     `json:"operator"`        // 操作人
+		Describe        string     `json:"desc"`            // 发布功能说明
+		CreateAt        int64      `json:"createAt"`        // 开始发布时间
+		UpdateAt        int64      `json:"updateAt"`        // 最近更新时间
+		EndAt           int64      `json:"endAt"`           // 发布完成时间
+	}
+
+	NodeReleaseAllowNodesExportReq {
+		ReleaseID string `path:"releaseID"` // 任务ID
+	}
+
+	NodeReleaseAllowNodesExportResp {
+		Nodes []string `json:"nodes"` // 全量灰度节点列表
+	}
+
+	NodeReleasePackagesReq {
+		DevType string `json:"devType"`       // 设备类型
+		App     string `json:"app"`           // 应用名
+		Size    int    `json:"size,optional"` // 展示包数量，默认10
+		Path    string `json:"path,optional"` // kodo中存放路径
+	}
+
+	NodeReleasePackagesResp {
+		Packages []PackageInfo `json:"packages"` // 可用包列表
+	}
+
+	PackageInfo {
+		Url  string `json:"url"`  // 下载链接
+		File string `json:"file"` // 文件名
+		Md5  string `json:"md5"`  // md5
+		Size string `json:"size"` // 文件大小
+	}
+
+	NodeReleaseCompleteReq {
+		ReleaseID string `path:"releaseID"` // 发布任务id
+	}
+
+	NodeReleaseAllowAppsListReq {
+		NodeType string `form:"nodeType,optional,options=node|smallBox"` // 节点类型
+		App      string `form:"app,optional"`                            // 应用名
+	}
+
+	NodeReleaseAllowAppsListResp {
+		Apps []AllowApp `json:"apps"` // 组件列表
+	}
+
+	AllowApp {
+		ID       string `json:"id"`       // 记录ID
+		Name     string `json:"name"`     // 组件名
+		NodeType string `json:"nodeType"` // 节点类型
+		Path     string `json:"path"`     // kodo中存放路径
+		Operator string `json:"operator"` // 操作人
+		CreateAt int64  `json:"createAt"` // 创建时间
+		Desc     string `json:"desc"`     // 描述
+	}
+
+	NodeReleaseAllowAppsUpdateReq {
+		Operation string   `json:"operation,options=add|del|update"` // 操作模式
+		ID        string   `json:"id,optional"`                      // 记录id, 删除|更新操作时生效
+		Name      string   `json:"name,optional"`                    // 组件名, 创建操作时生效
+		NodeTypes []string `json:"nodeTypes,optional"`               // 节点类型, 创建操作时生效
+		Desc      string   `json:"desc,optional"`                    // 描述, 创建|更新操作时生效
+		Path      string   `json:"path,optional"`                    // kodo中存放路径, 创建|更新时生效
+	}
+
+	NodeReleaseHistoryReq {
+		ReleaseID string `path:"releaseID"` // 发布任务id
+	}
+
+	NodeReleaseHistoryResp {
+		Items []NodeReleaseHistoryItem `json:"items"`
+	}
+
+	NodeReleaseHistoryItem {
+		Operation string `json:"operation"` // 操作
+
+		Operator string `json:"operator"` // 操作人
+		OpTime   int64  `json:"opTime"`   // 操作时间
+		Remark   string `json:"remark"`   // 操作备注
+
+		BeforeState string `json:"beforeState"` // 变更前状态
+		AfterState  string `json:"afterState"`  // 变更后状态
+
+		GrayPolicyInfo *GrayPolicyRemark `json:"grayPolicyInfo"` // 灰度配置变更, 创建发布|继续发布涉及
+		AppConfigInfo  *AppConfigRemark  `json:"appConfigInfo"`  // 回滚操作相关信息
+	}
+
+	AppConfigRemark {
+		BeforeMain *AppConfig `json:"beforeMain"`
+		AfterMain  *AppConfig `json:"afterMain"`
+	}
+
+	GrayPolicyRemark {
+		NodeIdsAdd       []string    `bson:"nodeIdsAdd" json:"nodeIdsAdd"`
+		NodeIdsDel       []string    `bson:"nodeIdsDel" json:"nodeIdsDel"`
+		AfterFilter      *GrayFilter `bson:"afterFilter" json:"afterFilter"`
+		FilterChangeMode string      `bson:"filterChangeMode" json:"filterChangeMode"`
+		BeforePercentage int         `bson:"percentage" json:"percentage"`
+		AfterPercentage  int         `bson:"percentage" json:"afterPercentage"`
+	}
+)
+
+@server (
+	group: noderelease
+)
+
+service jarvis-api {
+	@doc "创建发布任务"
+	@handler NodeReleaseCreate
+	post /v1/release/create (NodeReleaseCreateReq)
+
+	@doc "继续执行发布任务"
+	@handler NodeReleaseContinue
+	post /v1/release/:releaseID/continue (NodeReleaseContinueReq)
+
+	@doc "回滚发布任务"
+	@handler NodeReleaseRollback
+	post /v1/release/:releaseID/rollback (NodeReleaseRollbackReq)
+
+	@doc "全量发布任务"
+	@handler NodeReleaseComplete
+	post /v1/release/:releaseID/complete (NodeReleaseCompleteReq)
+
+	@doc "灰度过滤规则切换"
+	@handler NodeReleaseFilterSwitch
+	post /v1/release/:releaseID/filterswitch (NodeReleaseFilterSwitchReq)
+
+	@doc "发布任务列表"
+	@handler NodeReleaseList
+	post /v1/release/list (NodeReleaseListReq) returns (NodeReleaseListResp)
+
+	@doc "发布任务详情"
+	@handler NodeReleaseDetail
+	get /v1/release/:releaseID/detail (NodeReleaseDetailReq) returns (NodeReleaseDetailResp)
+
+	@doc "灰度节点全量导出接口"
+	@handler NodeReleaseAllowNodesExport
+	get /v1/release/:releaseID/allownodes/export (NodeReleaseAllowNodesExportReq) returns (NodeReleaseAllowNodesExportResp)
+
+	@doc "节点发布操作历史"
+	@handler NodeReleaseHistory
+	get /v1/release/:releaseID/history (NodeReleaseHistoryReq) returns (NodeReleaseHistoryResp)
+
+	@doc "从kodo拉取可用发布包"
+	@handler NodeReleasePackages
+	post /v1/release/packages (NodeReleasePackagesReq) returns (NodeReleasePackagesResp)
+
+	@doc "获取upd管理组件信息"
+	@handler NodeReleaseAllowAppsList
+	get /v1/release/allowapps (NodeReleaseAllowAppsListReq) returns (NodeReleaseAllowAppsListResp)
+
+	@doc "增删upd管理组件信息"
+	@handler NodeReleaseAllowAppsUpdate
+	post /v1/release/allowapps (NodeReleaseAllowAppsUpdateReq)
+}

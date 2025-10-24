@@ -1,0 +1,9 @@
+syntax = "v1"
+
+import (
+	"api/web/jarvisupd.api"
+	"api/web/noderelease.api"
+)
+
+// how to run goctl?
+// goctl api go -api jarvis.api -dir . -remote git@github.com:qbox/jarvis-template.git
