@@ -4,7 +4,6 @@ import { Layout, Menu } from 'antd'
 import {
   RocketOutlined,
   AppstoreOutlined,
-  SettingOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 

@@ -8,7 +8,6 @@ import {
   Input,
   Select,
   Card,
-  message,
 } from 'antd'
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'

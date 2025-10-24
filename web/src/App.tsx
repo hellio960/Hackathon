@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { Layout } from 'antd'
 import AppLayout from './components/Layout'
 import ReleaseList from './pages/Release/ReleaseList'
 import ReleaseDetail from './pages/Release/ReleaseDetail'
