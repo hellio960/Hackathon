@@ -71,10 +71,34 @@
 
 ## 快速开始
 
-### 安装依赖
+> 💡 **5分钟快速上手**: 查看 [QUICKSTART.md](QUICKSTART.md)
+
+### 前置要求
+
+- Go 1.21 或更高版本
+- Make（可选，用于简化构建）
+- Docker（可选，用于容器化部署）
+- Kubernetes 集群（可选，用于 K8S 部署）
+
+### 编译构建
 
 ```bash
+# 1. 克隆代码
+git clone https://github.com/PonnyS/Hackathon.git
+cd Hackathon
+
+# 2. 安装依赖
+make deps
+# 或
 go mod download
+
+# 3. 编译主程序
+make build
+# 或
+go build -o bin/deployer cmd/deployer/main.go
+
+# 4. 编译所有示例
+make build-all
 ```
 
 ### 运行示例
@@ -253,6 +277,82 @@ services:
 2. **新增健康检查方式**: 扩展 `HealthCheck` 类型
 3. **自定义回滚策略**: 配置 `RollbackPolicy`
 4. **自定义灰度策略**: 实现 `CanaryStrategy`
+
+## 构建与部署
+
+### 使用 Makefile
+
+项目提供了完整的 Makefile 用于构建和部署：
+
+```bash
+# 查看所有可用命令
+make help
+
+# 常用命令
+make deps          # 安装依赖
+make build         # 编译主程序
+make test          # 运行测试
+make clean         # 清理编译产物
+make docker-build  # 构建 Docker 镜像
+make k8s-deploy    # 部署到 Kubernetes
+```
+
+### Docker 部署
+
+```bash
+# 构建镜像
+make docker-build
+
+# 运行容器
+make docker-run
+
+# 自定义运行
+docker run --rm -it \
+  -v $(pwd)/config:/app/config \
+  intelligent-deployment-system:latest
+```
+
+### Kubernetes 部署
+
+```bash
+# 一键部署（包括 RBAC、ConfigMap、Service、HPA）
+make k8s-deploy
+
+# 查看状态
+make k8s-status
+
+# 删除部署
+make k8s-delete
+```
+
+### 详细文档
+
+- **快速开始**: [QUICKSTART.md](QUICKSTART.md) - 5分钟上手指南
+- **部署运维**: [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) - 完整部署和运维指南
+- **设计文档**: [docs/DESIGN_REQUIREMENTS.md](docs/DESIGN_REQUIREMENTS.md) - 详细设计需求文档
+
+## 项目文件说明
+
+```
+├── cmd/deployer/              # 主程序入口
+├── pkg/                       # 核心代码包
+│   ├── environment/          # 环境抽象层
+│   ├── version/              # 版本管理
+│   ├── health/               # 健康检查
+│   ├── rollback/             # 回滚控制
+│   └── orchestrator/         # 部署编排
+├── examples/                  # 示例程序
+├── config/                    # 配置文件
+├── deployments/              # 部署清单
+│   ├── kubernetes/           # K8S YAML 文件
+│   └── physical/             # 物理机脚本
+├── docs/                     # 文档
+├── Makefile                  # 构建脚本
+├── Dockerfile                # Docker 构建文件
+├── go.mod                    # Go 模块定义
+├── README.md                 # 主文档
+└── QUICKSTART.md             # 快速开始指南
+```
 
 ## 后续优化方向
 

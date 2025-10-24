@@ -1,0 +1,155 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intelligent-deployment-system
+  namespace: default
+  labels:
+    app: intelligent-deployment-system
+    version: v1.0.0
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: intelligent-deployment-system
+  template:
+    metadata:
+      labels:
+        app: intelligent-deployment-system
+        version: v1.0.0
+    spec:
+      serviceAccountName: deployment-system-sa
+      containers:
+      - name: deployer
+        image: intelligent-deployment-system:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: APP_ENV
+          value: "production"
+        - name: LOG_LEVEL
+          value: "info"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: deployment-system-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: intelligent-deployment-system
+  namespace: default
+  labels:
+    app: intelligent-deployment-system
+spec:
+  type: ClusterIP
+  selector:
+    app: intelligent-deployment-system
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployment-system-config
+  namespace: default
+data:
+  deployment.yaml: |
+    environments:
+      kubernetes:
+        type: kubernetes
+        namespace: production
+      
+      physical:
+        type: physical
+        hosts:
+          - 192.168.1.10
+          - 192.168.1.11
+    
+    services:
+      user-service:
+        environment: kubernetes
+        health_check:
+          type: http
+          endpoint: /health
+          timeout: 5s
+          interval: 10s
+        canary_strategy:
+          initial_traffic: 10
+          increment: 10
+          interval: 2m
+          max_traffic: 100
+        replicas: 5
+        rollback_policy:
+          max_health_check_failures: 3
+          health_check_interval: 30s
+          auto_rollback: true
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: deployment-system-sa
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: deployment-system-role
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets", "daemonsets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["services", "pods", "configmaps"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: deployment-system-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: deployment-system-role
+subjects:
+- kind: ServiceAccount
+  name: deployment-system-sa
+  namespace: default
