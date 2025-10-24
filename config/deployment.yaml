@@ -1,0 +1,53 @@
+environments:
+  kubernetes:
+    type: kubernetes
+    namespace: production
+    kubeconfig: ~/.kube/config
+  
+  physical:
+    type: physical
+    hosts:
+      - 192.168.1.10
+      - 192.168.1.11
+      - 192.168.1.12
+    ssh:
+      user: deploy
+      key_path: ~/.ssh/deploy_key
+      port: 22
+
+services:
+  user-service:
+    environment: kubernetes
+    health_check:
+      type: http
+      endpoint: /health
+      timeout: 5s
+      interval: 10s
+    canary_strategy:
+      initial_traffic: 10
+      increment: 10
+      interval: 2m
+      max_traffic: 100
+    replicas: 5
+    rollback_policy:
+      max_health_check_failures: 3
+      health_check_interval: 30s
+      auto_rollback: true
+  
+  api-gateway:
+    environment: physical
+    health_check:
+      type: tcp
+      endpoint: :8080
+      timeout: 3s
+      interval: 15s
+    canary_strategy:
+      initial_traffic: 5
+      increment: 15
+      interval: 3m
+      max_traffic: 100
+    replicas: 3
+    rollback_policy:
+      max_health_check_failures: 2
+      health_check_interval: 20s
+      auto_rollback: true
