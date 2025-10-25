@@ -2,16 +2,23 @@ package sharedmodel
 
 import (
 	"context"
-	"hackathon/common/device"
 	"strings"
 
 	cachec "github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/monc"
 	"go.mongodb.org/mongo-driver/bson"
+
+	"hackathon/common/device"
 )
 
 const (
 	CollectionNodeJoin = "nodeJoin"
+
+	NodeStageRegister   = "register"
+	NodeStageSubmitted  = "submitted"
+	NodeStageCensored   = "censored"
+	NodeStageUncensored = "uncensored"
+	NodeStageInservice  = "inservice"
 )
 
 type (

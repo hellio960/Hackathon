@@ -6,9 +6,9 @@ Mongo:
 BizRedisConfig:
   Host: 127.0.0.1:6379
 Kodo:
-  AccessKey: ""
-  SecretKey: ""
-  Bucket: ""
+  AccessKey: "4xfYw_7NTmJYGCHzaw5J0A7MjkXAyJydMOxITZA-"
+  SecretKey: "hdyCvp8VDmb6fviON8_3u_o0s68pdPHhZIypY5MF"
+  Bucket: "niulink-materials"
 CacheConfig:
   - Host: 127.0.0.1:6379
     Type: node

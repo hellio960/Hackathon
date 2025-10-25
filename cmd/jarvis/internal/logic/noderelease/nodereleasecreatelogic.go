@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"hackathon/common/utils"
-
 	"github.com/zeromicro/go-zero/core/logx"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -17,6 +15,7 @@ import (
 	"hackathon/cmd/jarvis/shared/noderelease"
 	"hackathon/common/device"
 	"hackathon/common/errorx"
+	"hackathon/common/utils"
 	"hackathon/sharedmodel"
 )
 

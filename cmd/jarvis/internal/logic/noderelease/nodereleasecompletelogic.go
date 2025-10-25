@@ -136,7 +136,8 @@ func (l *NodeReleaseCompleteLogic) ensureReleaseState(release *sharedmodel.NodeR
 				continue
 			}
 
-			if h.GrayPolicyInfo.NodeIdsAdd != nil || h.GrayPolicyInfo.NodeIdsDel != nil {
+			// 只跳过真正有节点增删的记录（空数组不算）
+			if len(h.GrayPolicyInfo.NodeIdsAdd) > 0 || len(h.GrayPolicyInfo.NodeIdsDel) > 0 {
 				continue
 			}
 

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发布详情</title>
+    <link rel="stylesheet" href="css/release-detail.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1>发布详情</h1>
+            <div class="header-actions">
+                <button class="btn btn-link" onclick="window.location.href='release-list.html'">
+                    ← 返回
+                </button>
+                <button class="btn btn-link" id="refreshBtn">
+                    🔄 刷新
+                </button>
+            </div>
+        </div>
+
+        <!-- 详情内容 -->
+        <div class="detail-container">
+            <!-- 基础信息 -->
+            <div class="info-card">
+                <div class="card-title">基础信息</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">发布 ID</span>
+                        <span class="info-value" id="releaseId">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">组件名</span>
+                        <span class="info-value" id="appName">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">设备类型</span>
+                        <span class="info-value" id="deviceType">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">操作类型</span>
+                        <span class="info-value" id="opType">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">更新时间</span>
+                        <span class="info-value" id="updateTime">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">发布人</span>
+                        <span class="info-value" id="operator">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">发布类型</span>
+                        <span class="info-value" id="releaseType">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">发布状态</span>
+                        <span class="info-value" id="releaseState">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">发布时间</span>
+                        <span class="info-value" id="createTime">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 当前运行版本 -->
+            <div class="config-card">
+                <div class="card-title">当前运行版本</div>
+                <div class="config-content">
+                    <div class="config-item">
+                        <span class="config-label">URL</span>
+                        <span class="config-value" id="mainUrl">-</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">MD5</span>
+                        <span class="config-value" id="mainMd5">-</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">包类型</span>
+                        <span class="config-value" id="mainType">-</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">程序名</span>
+                        <span class="config-value" id="mainCmd">-</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">启动参数</span>
+                        <span class="config-value" id="mainArgs">-</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">工作目录</span>
+                        <span class="config-value" id="mainWorkDir">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 灰度版本 -->
+            <div class="config-card">
+                <div class="card-title">灰度版本</div>
+                <div class="config-content">
+                    <div class="config-item">
+                        <span class="config-label">URL</span>
+                        <span class="config-value" id="alterUrl">-</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">MD5</span>
+                        <span class="config-value" id="alterMd5">-</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">包类型</span>
+                        <span class="config-value" id="alterType">-</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">程序名</span>
+                        <span class="config-value" id="alterCmd">-</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">启动参数</span>
+                        <span class="config-value" id="alterArgs">-</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">工作目录</span>
+                        <span class="config-value" id="alterWorkDir">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 灰度策略 -->
+            <div class="gray-policy-card">
+                <div class="card-title">灰度策略</div>
+                <div class="policy-content">
+                    <div class="policy-row">
+                        <span class="policy-label">灰度方式</span>
+                        <span class="policy-value" id="grayMode">-</span>
+                        <button class="btn btn-link btn-sm" id="switchModeBtn">切换</button>
+                    </div>
+                    <div class="policy-row" id="filterDevTypeRow" style="display: none;">
+                        <span class="policy-label">设备类型</span>
+                        <span class="policy-value" id="filterDevType">-</span>
+                    </div>
+                    <div class="policy-row" id="filterStatusRow" style="display: none;">
+                        <span class="policy-label">节点状态</span>
+                        <span class="policy-value" id="filterStatus">-</span>
+                    </div>
+                    <div class="policy-row" id="filterStagesRow" style="display: none;">
+                        <span class="policy-label">节点阶段</span>
+                        <span class="policy-value" id="filterStages">-</span>
+                    </div>
+                    <div class="policy-row" id="filterCustomerIdsRow" style="display: none;">
+                        <span class="policy-label">业务ID</span>
+                        <span class="policy-value" id="filterCustomerIds">-</span>
+                    </div>
+                    <div class="policy-row" id="specifiedNodesRow">
+                        <span class="policy-label">指定灰度节点</span>
+                        <div class="policy-value-col">
+                            <div class="node-list" id="specifiedNodesList">-</div>
+                            <button class="btn btn-link btn-sm" id="exportSpecifiedNodesBtn">全量导出</button>
+                        </div>
+                    </div>
+                    <div class="policy-row">
+                        <span class="policy-label">当前灰度节点</span>
+                        <div class="policy-value-col">
+                            <div class="node-list" id="currentNodesList">-</div>
+                            <button class="btn btn-link btn-sm" id="exportCurrentNodesBtn">全量导出</button>
+                        </div>
+                    </div>
+                    <div class="policy-row">
+                        <span class="policy-label">当前灰度比例</span>
+                        <span class="policy-value">
+                            <span id="currentPercentage">0</span>%
+                            &nbsp;&nbsp;当前灰度数量：<span id="allowCount">0</span>
+                            &nbsp;&nbsp;当前节点匹配数量：<span id="totalCount">0</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 灰度进度 -->
+            <div class="progress-card">
+                <div class="card-title">
+                    灰度进度
+                    <button class="btn btn-link" id="showHistoryBtn" style="float: right;">操作记录</button>
+                </div>
+                <div class="progress-content">
+                    <div class="form-group">
+                        <label for="newPercentage">灰度比例</label>
+                        <div class="percentage-input">
+                            <input type="number" id="newPercentage" min="0" max="100" value="0">
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="addNodes">新增灰度节点</label>
+                        <textarea id="addNodes" rows="4" placeholder="请输入节点 ID，每行一个"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="removeNodes">移除灰度节点</label>
+                        <textarea id="removeNodes" rows="4" placeholder="请输入节点 ID，每行一个"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="action-buttons">
+                <button class="btn btn-danger" id="primaryActionBtn">-</button>
+                <button class="btn btn-primary" id="continueBtn">继续灰度</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div id="loading" class="loading hidden">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中...</div>
+    </div>
+
+    <!-- 切换灰度模式弹窗 -->
+    <div id="switchModeModal" class="modal hidden">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h3>切换灰度模式</h3>
+                <button id="closeSwitchModeModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>灰度方式</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="switchGrayMode" value="nodeIds" checked>
+                            <span class="radio-text">灰度节点</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="switchGrayMode" value="filter">
+                            <span class="radio-text">规则过滤</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 灰度节点模式 -->
+                <div id="switchNodeIdsSection" class="mode-section">
+                    <div class="form-group">
+                        <label for="switchNodeIds">灰度节点</label>
+                        <textarea id="switchNodeIds" rows="5" placeholder="请输入节点 ID，每行一个"></textarea>
+                    </div>
+                </div>
+
+                <!-- 规则过滤模式 -->
+                <div id="switchFilterSection" class="mode-section" style="display: none;">
+                    <div class="form-group">
+                        <label for="switchStatus">节点状态</label>
+                        <select id="switchStatus">
+                            <option value="">全部</option>
+                            <option value="online" selected>在线</option>
+                            <option value="outline">离线</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>节点阶段</label>
+                        <div class="custom-multiselect" id="switchStagesWrapper">
+                            <div class="multiselect-trigger">
+                                <span class="multiselect-text">请选择</span>
+                                <span class="multiselect-arrow">▼</span>
+                            </div>
+                            <div class="multiselect-dropdown">
+                                <div class="multiselect-header">
+                                    <label class="multiselect-option">
+                                        <input type="checkbox" class="select-all-checkbox">
+                                        <span>全选</span>
+                                    </label>
+                                </div>
+                                <div class="multiselect-options">
+                                    <label class="multiselect-option">
+                                        <input type="checkbox" value="register">
+                                        <span>已注册</span>
+                                    </label>
+                                    <label class="multiselect-option">
+                                        <input type="checkbox" value="submitted">
+                                        <span>已提交待验收</span>
+                                    </label>
+                                    <label class="multiselect-option">
+                                        <input type="checkbox" value="censored">
+                                        <span>验收通过</span>
+                                    </label>
+                                    <label class="multiselect-option">
+                                        <input type="checkbox" value="uncensored">
+                                        <span>验收不通过</span>
+                                    </label>
+                                    <label class="multiselect-option">
+                                        <input type="checkbox" value="inservice">
+                                        <span>服务中</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>业务ID</label>
+                        <div class="custom-multiselect" id="switchCustomerIdsWrapper">
+                            <div class="multiselect-trigger">
+                                <span class="multiselect-text">请选择</span>
+                                <span class="multiselect-arrow">▼</span>
+                            </div>
+                            <div class="multiselect-dropdown">
+                                <div class="multiselect-header">
+                                    <label class="multiselect-option">
+                                        <input type="checkbox" class="select-all-checkbox">
+                                        <span>全选</span>
+                                    </label>
+                                </div>
+                                <div class="multiselect-options">
+                                    <label class="multiselect-option">
+                                        <input type="checkbox" value="10001">
+                                        <span>10001 (业务A)</span>
+                                    </label>
+                                    <label class="multiselect-option">
+                                        <input type="checkbox" value="10002">
+                                        <span>10002 (业务B)</span>
+                                    </label>
+                                    <label class="multiselect-option">
+                                        <input type="checkbox" value="10003">
+                                        <span>10003 (业务C)</span>
+                                    </label>
+                                    <label class="multiselect-option">
+                                        <input type="checkbox" value="10004">
+                                        <span>10004 (业务D)</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelSwitchModeBtn" class="btn btn-secondary">取消</button>
+                <button id="confirmSwitchModeBtn" class="btn btn-primary">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 操作历史弹窗 -->
+    <div id="historyModal" class="modal hidden">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>操作历史</h3>
+                <button id="closeHistoryModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="historyTimeline" class="timeline">
+                    <!-- 时间线将动态生成 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="closeHistoryBtn" class="btn btn-secondary">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div id="confirmModal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3 id="confirmTitle">确认操作</h3>
+                <button id="closeConfirmModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">确定要执行此操作吗？</p>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelConfirmBtn" class="btn btn-secondary">取消</button>
+                <button id="doConfirmBtn" class="btn btn-danger">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/release-detail.js"></script>
+</body>
+</html>
+

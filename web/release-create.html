@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建发布任务</title>
+    <link rel="stylesheet" href="css/release-create.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1>节点发布</h1>
+            <div class="tabs">
+                <div class="tab" onclick="window.location.href='release-list.html'">发布任务</div>
+                <div class="tab" onclick="window.location.href='component-management.html'">组件管理</div>
+            </div>
+        </div>
+
+        <!-- 创建发布任务表单 -->
+        <div class="create-form-container">
+            <!-- 表单标题 -->
+            <div class="form-title">
+                <h2>创建发布任务</h2>
+                <button class="close-btn" onclick="window.location.href='release-list.html'">&times;</button>
+            </div>
+
+            <!-- 步骤1：基本信息 -->
+            <div id="step1" class="form-step active">
+                <div class="form-content">
+                    <div class="form-group">
+                        <label for="appName">组件 <span class="required">*</span></label>
+                        <select id="appName" name="appName" required>
+                            <option value="">请选择组件</option>
+                        </select>
+                    </div>
+
+                <div class="form-group">
+                    <label for="devType">设备类型 <span class="required">*</span></label>
+                    <select id="devType" name="devType" required>
+                        <option value="">请选择设备类型</option>
+                        <option value="jarvis.A">大节点 (jarvis.A - Linux x86_64)</option>
+                        <option value="ant.A">小盒子 (ant.A - Linux ARM32)</option>
+                        <option value="ant.B">小盒子 (ant.B - Linux ARM64)</option>
+                        <option value="ant.C">小盒子 (ant.C - Linux x86_64)</option>
+                        <option value="droid.A">安卓盒子 (droid.A - Android ARM64)</option>
+                        <option value="droid.B">安卓盒子 (droid.B - Android ARM32)</option>
+                        <option value="droid.C">安卓盒子 (droid.C - Android x86_64)</option>
+                    </select>
+                </div>
+
+                    <div class="form-group">
+                        <label>发布类型 <span class="required">*</span></label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="releaseType" value="formal" checked>
+                                <span class="radio-text">正式发布</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="releaseType" value="beta">
+                                <span class="radio-text">功能验证</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="opType">操作类型 <span class="required">*</span></label>
+                        <select id="opType" name="opType" required>
+                            <option value="">请选择操作类型</option>
+                            <option value="add">新增</option>
+                            <option value="update">升级</option>
+                            <option value="delete">移除</option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="nextStepBtn">下一步</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤2：详细配置 -->
+            <div id="step2" class="form-step">
+                <div class="form-content">
+                    <!-- 基本信息回显 -->
+                    <div class="info-section">
+                        <div class="info-row">
+                            <span class="info-label">组件名</span>
+                            <span class="info-value" id="displayAppName"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">设备类型</span>
+                            <span class="info-value" id="displayDevType"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">发布类型</span>
+                            <span class="info-value" id="displayReleaseType"></span>
+                        </div>
+                    </div>
+
+                    <!-- 当前版本 -->
+                    <div class="section-title">当前版本</div>
+                    <div class="config-section readonly-section" id="currentConfigSection">
+                        <div class="form-group">
+                            <label>URL</label>
+                            <input type="text" id="currentUrl" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>MD5</label>
+                            <input type="text" id="currentMd5" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>包类型</label>
+                            <input type="text" id="currentPackageType" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>程序名</label>
+                            <input type="text" id="currentCmd" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>启动参数</label>
+                            <input type="text" id="currentArgs" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>工作目录</label>
+                            <input type="text" id="currentWorkDir" readonly>
+                        </div>
+                    </div>
+
+                    <!-- 发布版本 -->
+                    <div class="section-title">发布版本</div>
+                    <div class="config-section">
+                        <div class="form-group">
+                            <label for="packageSelect">版本 <span class="required">*</span></label>
+                            <div class="package-select-group">
+                                <select id="packageSelect" name="packageSelect" required>
+                                    <option value="">请选择版本包</option>
+                                </select>
+                                <button type="button" class="btn btn-link" id="specifyPathBtn">指定路径筛选</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="packageType">包类型 <span class="required">*</span></label>
+                            <select id="packageType" name="packageType" required>
+                                <option value="">请选择包类型</option>
+                                <option value="executable">可执行文件</option>
+                                <option value="zipped">压缩包</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cmd">程序名 <span class="required">*</span></label>
+                            <input type="text" id="cmd" name="cmd" placeholder="请输入程序名" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="args">启动参数</label>
+                            <input type="text" id="args" name="args" placeholder="多个参数用空格分隔">
+                            <div class="form-hint">例如: --config /etc/app/config.yaml --port 8080</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="workDir">工作目录 <span class="required">*</span></label>
+                            <input type="text" id="workDir" name="workDir" placeholder="请输入工作目录" required>
+                        </div>
+                    </div>
+
+                    <!-- 灰度策略 -->
+                    <div class="section-title">灰度策略</div>
+                    <div class="config-section">
+                        <div class="form-group">
+                            <label>灰度方式 <span class="required">*</span></label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="grayMode" value="nodeIds" checked>
+                                    <span class="radio-text">灰度节点</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="grayMode" value="filter">
+                                    <span class="radio-text">规则过滤</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 灰度节点模式 -->
+                        <div id="nodeIdsSection" class="gray-mode-section">
+                            <div class="form-group">
+                                <label for="nodeIds">灰度节点 <span class="required">*</span></label>
+                                <textarea id="nodeIds" name="nodeIds" rows="5" placeholder="请输入灰度节点，每行一个"></textarea>
+                                <div class="form-hint">每行输入一个节点ID</div>
+                            </div>
+                        </div>
+
+                        <!-- 规则过滤模式 -->
+                        <div id="filterSection" class="gray-mode-section" style="display: none;">
+                            <div class="form-group">
+                                <label for="filterNodeIds">节点ID</label>
+                                <textarea id="filterNodeIds" name="filterNodeIds" rows="4" placeholder="每行一个节点ID"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="nodeStatus">节点状态</label>
+                                <select id="nodeStatus" name="nodeStatus">
+                                    <option value="">全部</option>
+                                    <option value="online" selected>在线</option>
+                                    <option value="outline">离线</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="stages">节点阶段</label>
+                                <select id="stages" name="stages" multiple size="5">
+                                    <option value="register">已注册</option>
+                                    <option value="submitted">已提交待验收</option>
+                                    <option value="censored">验收通过</option>
+                                    <option value="uncensored">验收不通过</option>
+                                    <option value="inservice">服务中</option>
+                                </select>
+                                <div class="form-hint">点击选中，再次点击取消</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group gray-percentage-section">
+                            <label for="percentage">灰度比例 <span class="required">*</span></label>
+                            <div class="percentage-input-group">
+                                <input type="number" id="percentage" name="percentage" min="0" max="100" value="10" required>
+                                <span class="percentage-unit">%</span>
+                            </div>
+                            <div class="form-hint">请输入0-100之间的整数</div>
+                        </div>
+                    </div>
+
+                    <!-- 发布描述 -->
+                    <div class="form-group">
+                        <label for="describe">发布描述 <span class="required">*</span></label>
+                        <textarea id="describe" name="describe" rows="4" placeholder="请输入发布描述" required></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="prevStepBtn">返回</button>
+                        <button type="button" class="btn btn-primary" id="submitBtn">发布</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div id="loading" class="loading hidden">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中...</div>
+    </div>
+
+    <!-- 指定路径筛选弹窗 -->
+    <div id="pathFilterModal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3>指定路径筛选</h3>
+                <button id="closePathFilterModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="customPath">包路径 <span class="required">*</span></label>
+                    <input type="text" id="customPath" placeholder="请输入Kodo中的存放路径">
+                    <div class="form-hint">例如: /packages/nldu/</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelPathFilterBtn" class="btn btn-secondary">取消</button>
+                <button id="confirmPathFilterBtn" class="btn btn-primary">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/release-create.js"></script>
+</body>
+</html>
+
