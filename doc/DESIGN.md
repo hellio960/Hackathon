@@ -284,8 +284,12 @@ type GrayNode struct {
 - **Topic 机制**：每个应用的灰度节点存储在独立的 Redis Key 中
 
 ```
-Key Pattern: allowNodes:{nodeType}:{app}:{releaseID}
+Key Pattern: 
+- 大节点: jarvis_upd_config_allow_nodes_{app}_{releaseID}
+- 小盒子: box_upd_config_allow_nodes_{app}_{releaseID}
 Value: Set<NodeId>
+
+注: 实际实现中使用固定前缀而非动态的 nodeType 占位符
 ```
 
 #### 3.5.3 节点分配策略
@@ -298,6 +302,14 @@ Value: Set<NodeId>
 1. 根据 `GrayFilter` 从全量节点池中筛选符合条件的节点
 2. 计算目标灰度节点数：`TotalCount * Percentage / 100`
 3. 从候选节点中随机/顺序选择节点加入灰度
+   - 推荐使用 MongoDB `$sample` 聚合提升性能:
+     ```javascript
+     db.nodes.aggregate([
+       { $match: filterCriteria },
+       { $sample: { size: targetCount } }
+     ])
+     ```
+   - 复杂度从 O(N + M) 降至 O(log N + M)
 4. 更新 Redis 和 MongoDB
 
 ### 3.6 节点搜索 (NodesSearch)
@@ -312,7 +324,7 @@ Value: Set<NodeId>
 type NodesSearchCond struct {
     DevType     string   // 设备类型
     Stage       string   // 节点阶段
-    Status      string   // 节点状态:online/offline
+    Status      string   // 节点状态:online/outline
     CustomerIds []uint32 // 业务 ID 列表
     NodeIds     []string // 指定节点 ID
     Size        int      // 返回数量
@@ -853,7 +865,7 @@ Content-Type: application/json
 {
   "devType": "node",
   "stage": "prod",
-  "status": "online",
+  "status": "online",  // 可选值: online, outline
   "customerIds": [100, 200],
   "size": 10
 }
@@ -1045,6 +1057,17 @@ db.allowApps.createIndex({ createAt: -1 })
 db.nodeRelease.createIndex({ app: 1, deviceType: 1, state: 1 })
 db.nodeRelease.createIndex({ createAt: -1 })
 db.nodeRelease.createIndex({ releaseType: 1, state: 1 })
+
+// 唯一性约束索引(防止同一应用同设备类型并发正式发布)
+db.nodeRelease.createIndex(
+  { app: 1, deviceType: 1, releaseType: 1, state: 1 },
+  { 
+    partialFilterExpression: { 
+      state: "processing", 
+      releaseType: "formal" 
+    }
+  }
+)
 ```
 
 #### 6.1.3 grayNodes（灰度节点表）
@@ -1104,29 +1127,34 @@ db.nodeReleaseHistory.createIndex({ releaseId: 1, opTime: -1 })
 #### 6.2.1 灰度节点集合
 
 ```
-Key: allowNodes:node:example-app:507f1f77bcf86cd799439011
+Key: jarvis_upd_config_allow_nodes_example-app_507f1f77bcf86cd799439011
 Type: Set
 Members: ["node-001", "node-002", "node-003", ...]
-TTL: 无（手动清理）
+TTL: 604800秒(7天) - 作为安全网防止内存泄漏
+
+注: 
+- 活跃发布任务应定期刷新TTL
+- 完成/回滚的发布任务应主动删除对应key
+- 保守的7天TTL可防止系统异常时的内存泄漏
 ```
 
 **操作**
 
 ```bash
 # 添加节点
-SADD allowNodes:node:example-app:507f1f77bcf86cd799439011 node-001 node-002
+SADD jarvis_upd_config_allow_nodes_example-app_507f1f77bcf86cd799439011 node-001 node-002
 
 # 移除节点
-SREM allowNodes:node:example-app:507f1f77bcf86cd799439011 node-001
+SREM jarvis_upd_config_allow_nodes_example-app_507f1f77bcf86cd799439011 node-001
 
 # 查询节点数量
-SCARD allowNodes:node:example-app:507f1f77bcf86cd799439011
+SCARD jarvis_upd_config_allow_nodes_example-app_507f1f77bcf86cd799439011
 
 # 判断节点是否存在
-SISMEMBER allowNodes:node:example-app:507f1f77bcf86cd799439011 node-001
+SISMEMBER jarvis_upd_config_allow_nodes_example-app_507f1f77bcf86cd799439011 node-001
 
-# 获取所有节点
-SMEMBERS allowNodes:node:example-app:507f1f77bcf86cd799439011
+# 获取所有节点(大规模场景推荐使用SSCAN分页)
+SSCAN jarvis_upd_config_allow_nodes_example-app_507f1f77bcf86cd799439011 0 COUNT 100
 
 # 清空节点
 DEL allowNodes:node:example-app:507f1f77bcf86cd799439011
