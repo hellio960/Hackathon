@@ -102,9 +102,43 @@
 
 ## 3. 核心模块设计
 
-### 3.1 发布任务管理 (NodeRelease)
+### 3.1 组件管理 (AllowApps)
 
-#### 3.1.1 数据模型
+#### 3.1.1 功能概述
+
+组件管理模块用于管理可发布的应用组件,提供组件的增删改查功能。每个组件关联特定的节点类型,并指定其在 Kodo 对象存储中的存放路径。
+
+#### 3.1.2 数据模型
+
+```go
+type AllowAppsTemplate struct {
+    ID       string    // 组件 ID
+    Name     string    // 组件名称
+    NodeType string    // 节点类型
+    Path     string    // Kodo 中的存放路径
+    Desc     string    // 组件描述
+    Operator string    // 操作人
+    CreateAt time.Time // 创建时间
+    UpdateAt time.Time // 更新时间
+}
+```
+
+#### 3.1.3 核心功能
+
+- **组件注册**:新增可发布的应用组件
+- **组件查询**:按名称、节点类型搜索组件
+- **组件更新**:修改组件路径和描述信息
+- **组件删除**:移除不再使用的组件
+
+#### 3.1.4 应用场景
+
+- 在创建发布任务前,先在组件管理中注册应用
+- 组件的 Path 字段指向 Kodo 中该应用所有版本包的存放目录
+- 发布时从该目录中选择具体的版本包进行发布
+
+### 3.2 发布任务管理 (NodeRelease)
+
+#### 3.2.1 数据模型
 
 ```go
 type NodeRelease struct {
@@ -125,18 +159,18 @@ type NodeRelease struct {
 }
 ```
 
-#### 3.1.2 发布类型
+#### 3.2.2 发布类型
 
 - **正式发布 (formal)**：生产环境的版本升级，同一应用同一设备类型只能有一个正式发布任务在进行中
 - **功能验证 (beta)**：新功能的小范围验证，可与正式发布并行
 
-#### 3.1.3 操作类型
+#### 3.2.3 操作类型
 
 - **新增组件 (add)**：部署新应用
 - **升级组件 (update)**：升级现有应用版本
 - **移除组件 (delete)**：下线应用
 
-#### 3.1.4 状态流转
+#### 3.2.4 状态流转
 
 ```
           创建
@@ -160,9 +194,9 @@ type NodeRelease struct {
  └────────────┘
 ```
 
-### 3.2 灰度策略 (GrayPolicy)
+### 3.3 灰度策略 (GrayPolicy)
 
-#### 3.2.1 数据模型
+#### 3.3.1 数据模型
 
 ```go
 type GrayPolicy struct {
@@ -188,7 +222,7 @@ type StatInfo struct {
 }
 ```
 
-#### 3.2.2 灰度模式
+#### 3.3.2 灰度模式
 
 **1. 指定节点模式**
 
@@ -207,13 +241,13 @@ type StatInfo struct {
 - 同时设置 `NodeIds` 和 `Filter`
 - 先满足指定节点，再按规则补充
 
-#### 3.2.3 灰度比例控制
+#### 3.3.3 灰度比例控制
 
 - **初始比例**：创建任务时设定初始灰度比例（如 10%）
 - **渐进增加**：通过 `/continue` 接口逐步增加比例（如 10% → 30% → 50% → 100%）
 - **动态调整**：支持增加/删除特定节点
 
-### 3.3 应用配置 (AppConfig)
+### 3.4 应用配置 (AppConfig)
 
 ```go
 type AppConfig struct {
@@ -230,9 +264,9 @@ type AppConfig struct {
 - **MainConfig**：当前线上运行的版本配置
 - **AlterConfig**：灰度中的新版本配置
 
-### 3.4 灰度节点管理 (GrayNodes)
+### 3.5 灰度节点管理 (GrayNodes)
 
-#### 3.4.1 数据模型
+#### 3.5.1 数据模型
 
 ```go
 type GrayNode struct {
@@ -243,18 +277,22 @@ type GrayNode struct {
 }
 ```
 
-#### 3.4.2 存储设计
+#### 3.5.2 存储设计
 
 - **持久化存储**：MongoDB 存储灰度节点记录，用于历史追溯
 - **缓存层**：Redis 存储当前灰度中的节点集合，格式：`Set<NodeId>`
 - **Topic 机制**：每个应用的灰度节点存储在独立的 Redis Key 中
 
 ```
-Key Pattern: allowNodes:{nodeType}:{app}:{releaseID}
+Key Pattern: 
+- 大节点: jarvis_upd_config_allow_nodes_{app}_{releaseID}
+- 小盒子: box_upd_config_allow_nodes_{app}_{releaseID}
 Value: Set<NodeId>
+
+注: 实际实现中使用固定前缀而非动态的 nodeType 占位符
 ```
 
-#### 3.4.3 节点分配策略
+#### 3.5.3 节点分配策略
 
 **冲突检测**：
 - 同一节点不能同时加入多个正在进行的发布任务
@@ -264,11 +302,64 @@ Value: Set<NodeId>
 1. 根据 `GrayFilter` 从全量节点池中筛选符合条件的节点
 2. 计算目标灰度节点数：`TotalCount * Percentage / 100`
 3. 从候选节点中随机/顺序选择节点加入灰度
+   - 推荐使用 MongoDB `$sample` 聚合提升性能:
+     ```javascript
+     db.nodes.aggregate([
+       { $match: filterCriteria },
+       { $sample: { size: targetCount } }
+     ])
+     ```
+   - 复杂度从 O(N + M) 降至 O(log N + M)
 4. 更新 Redis 和 MongoDB
 
-### 3.5 发布历史 (ReleaseHistory)
+### 3.6 节点搜索 (NodesSearch)
 
-#### 3.5.1 数据模型
+#### 3.6.1 功能概述
+
+节点搜索模块提供根据多种条件查询节点的能力,支持按设备类型、阶段、状态、业务 ID 等维度进行灵活组合查询。
+
+#### 3.6.2 查询条件
+
+```go
+type NodesSearchCond struct {
+    DevType     string   // 设备类型
+    Stage       string   // 节点阶段
+    Status      string   // 节点状态:online/outline
+    CustomerIds []uint32 // 业务 ID 列表
+    NodeIds     []string // 指定节点 ID
+    Size        int      // 返回数量
+}
+```
+
+#### 3.6.3 应用场景
+
+- 在创建发布任务时,通过节点搜索预览符合条件的节点
+- 验证灰度策略的过滤规则是否正确
+- 为灰度发布选择合适的目标节点
+
+### 3.7 节点模拟器 (Node Simulator)
+
+#### 3.7.1 功能概述
+
+节点模拟器是一个测试工具,用于模拟节点的行为和状态,便于在开发和测试环境中验证发布系统的功能。
+
+#### 3.7.2 核心功能
+
+- **节点模拟**:创建虚拟节点用于测试
+- **状态模拟**:模拟节点的在线/离线状态
+- **配置验证**:验证节点是否正确接收到发布配置
+- **批量测试**:支持批量创建和管理测试节点
+
+#### 3.7.3 使用场景
+
+- 发布系统功能测试
+- 灰度策略验证
+- 多节点并发场景模拟
+- 发布流程演示
+
+### 3.8 发布历史 (ReleaseHistory)
+
+#### 3.8.1 数据模型
 
 ```go
 type NodeReleaseHistory struct {
@@ -286,7 +377,7 @@ type NodeReleaseHistory struct {
 }
 ```
 
-#### 3.5.2 用途
+#### 3.8.2 用途
 
 - **审计日志**：记录所有发布操作，满足合规要求
 - **问题排查**：出现问题时可追溯操作历史
@@ -672,7 +763,132 @@ GET /v1/release/{releaseID}/detail
 }
 ```
 
-### 5.6 发布任务列表
+### 5.6 查询可用包列表
+
+**请求**
+
+```http
+POST /v1/release/packages
+Content-Type: application/json
+
+{
+  "devType": "node",
+  "app": "example-app",
+  "size": 10,
+  "path": "releases/example-app/"
+}
+```
+
+**响应**
+
+```json
+{
+  "packages": [
+    {
+      "url": "https://kodo.example.com/releases/example-app/example-app-v2.0.0.tar.gz",
+      "file": "example-app-v2.0.0.tar.gz",
+      "md5": "5d41402abc4b2a76b9719d911017c592",
+      "size": "10.5MB"
+    },
+    {
+      "url": "https://kodo.example.com/releases/example-app/example-app-v1.9.0.tar.gz",
+      "file": "example-app-v1.9.0.tar.gz",
+      "md5": "098f6bcd4621d373cade4e832627b4f6",
+      "size": "10.2MB"
+    }
+  ]
+}
+```
+
+### 5.7 组件管理
+
+#### 5.7.1 获取组件列表
+
+**请求**
+
+```http
+GET /v1/release/allowapps?nodeType=node&app=example-app
+```
+
+**响应**
+
+```json
+{
+  "apps": [
+    {
+      "id": "507f1f77bcf86cd799439011",
+      "name": "example-app",
+      "nodeType": "node",
+      "path": "releases/example-app/",
+      "operator": "admin",
+      "createAt": 1698000000,
+      "desc": "示例应用"
+    }
+  ]
+}
+```
+
+#### 5.7.2 新增/更新/删除组件
+
+**请求**
+
+```http
+POST /v1/release/allowapps
+Content-Type: application/json
+
+{
+  "operation": "add",
+  "name": "example-app",
+  "nodeTypes": ["node", "smallBox"],
+  "path": "releases/example-app/",
+  "desc": "示例应用"
+}
+```
+
+**响应**
+
+```json
+{
+  "code": 0,
+  "msg": "success"
+}
+```
+
+### 5.8 节点搜索
+
+**请求**
+
+```http
+POST /v1/nodes/search
+Content-Type: application/json
+
+{
+  "devType": "node",
+  "stage": "prod",
+  "status": "online",  // 可选值: online, outline
+  "customerIds": [100, 200],
+  "size": 10
+}
+```
+
+**响应**
+
+```json
+{
+  "nodes": [
+    {
+      "nodeId": "node-001",
+      "deviceType": "node",
+      "stage": "prod",
+      "status": "online",
+      "customerIDs": [100]
+    }
+  ],
+  "total": 1
+}
+```
+
+### 5.9 发布任务列表
 
 **请求**
 
@@ -707,7 +923,7 @@ Content-Type: application/json
 }
 ```
 
-### 5.7 导出灰度节点
+### 5.10 导出灰度节点
 
 **请求**
 
@@ -723,7 +939,7 @@ GET /v1/release/{releaseID}/allownodes/export
 }
 ```
 
-### 5.8 查询发布历史
+### 5.11 查询发布历史
 
 **请求**
 
@@ -767,7 +983,30 @@ GET /v1/release/{releaseID}/history
 
 ### 6.1 MongoDB 集合
 
-#### 6.1.1 nodeRelease（发布任务表）
+#### 6.1.1 allowApps（组件管理表）
+
+```javascript
+{
+  _id: "507f1f77bcf86cd799439011",
+  name: "example-app",
+  nodeType: "node",
+  path: "releases/example-app/",
+  desc: "示例应用",
+  operator: "admin",
+  createAt: ISODate("2023-10-24T10:00:00Z"),
+  updateAt: ISODate("2023-10-24T10:00:00Z")
+}
+```
+
+**索引**
+
+```javascript
+db.allowApps.createIndex({ name: 1, nodeType: 1 }, { unique: true })
+db.allowApps.createIndex({ nodeType: 1 })
+db.allowApps.createIndex({ createAt: -1 })
+```
+
+#### 6.1.2 nodeRelease（发布任务表）
 
 ```javascript
 {
@@ -818,9 +1057,20 @@ GET /v1/release/{releaseID}/history
 db.nodeRelease.createIndex({ app: 1, deviceType: 1, state: 1 })
 db.nodeRelease.createIndex({ createAt: -1 })
 db.nodeRelease.createIndex({ releaseType: 1, state: 1 })
+
+// 唯一性约束索引(防止同一应用同设备类型并发正式发布)
+db.nodeRelease.createIndex(
+  { app: 1, deviceType: 1, releaseType: 1, state: 1 },
+  { 
+    partialFilterExpression: { 
+      state: "processing", 
+      releaseType: "formal" 
+    }
+  }
+)
 ```
 
-#### 6.1.2 grayNodes（灰度节点表）
+#### 6.1.3 grayNodes（灰度节点表）
 
 ```javascript
 {
@@ -838,7 +1088,7 @@ db.grayNodes.createIndex({ releaseId: 1, nodeId: 1 }, { unique: true })
 db.grayNodes.createIndex({ nodeId: 1 })
 ```
 
-#### 6.1.3 nodeReleaseHistory（发布历史表）
+#### 6.1.4 nodeReleaseHistory（发布历史表）
 
 ```javascript
 {
@@ -877,29 +1127,34 @@ db.nodeReleaseHistory.createIndex({ releaseId: 1, opTime: -1 })
 #### 6.2.1 灰度节点集合
 
 ```
-Key: allowNodes:node:example-app:507f1f77bcf86cd799439011
+Key: jarvis_upd_config_allow_nodes_example-app_507f1f77bcf86cd799439011
 Type: Set
 Members: ["node-001", "node-002", "node-003", ...]
-TTL: 无（手动清理）
+TTL: 604800秒(7天) - 作为安全网防止内存泄漏
+
+注: 
+- 活跃发布任务应定期刷新TTL
+- 完成/回滚的发布任务应主动删除对应key
+- 保守的7天TTL可防止系统异常时的内存泄漏
 ```
 
 **操作**
 
 ```bash
 # 添加节点
-SADD allowNodes:node:example-app:507f1f77bcf86cd799439011 node-001 node-002
+SADD jarvis_upd_config_allow_nodes_example-app_507f1f77bcf86cd799439011 node-001 node-002
 
 # 移除节点
-SREM allowNodes:node:example-app:507f1f77bcf86cd799439011 node-001
+SREM jarvis_upd_config_allow_nodes_example-app_507f1f77bcf86cd799439011 node-001
 
 # 查询节点数量
-SCARD allowNodes:node:example-app:507f1f77bcf86cd799439011
+SCARD jarvis_upd_config_allow_nodes_example-app_507f1f77bcf86cd799439011
 
 # 判断节点是否存在
-SISMEMBER allowNodes:node:example-app:507f1f77bcf86cd799439011 node-001
+SISMEMBER jarvis_upd_config_allow_nodes_example-app_507f1f77bcf86cd799439011 node-001
 
-# 获取所有节点
-SMEMBERS allowNodes:node:example-app:507f1f77bcf86cd799439011
+# 获取所有节点(大规模场景推荐使用SSCAN分页)
+SSCAN jarvis_upd_config_allow_nodes_example-app_507f1f77bcf86cd799439011 0 COUNT 100
 
 # 清空节点
 DEL allowNodes:node:example-app:507f1f77bcf86cd799439011
@@ -1219,23 +1474,150 @@ require (
 | 完成发布 | < 200ms | 包括配置更新 |
 | 回滚 | < 500ms | 包括历史保存 |
 
-## 13. 未来规划
+## 13. 前端界面设计
 
-### 13.1 Phase 1（已完成）
+### 13.1 发布任务管理界面
+
+#### 13.1.1 发布任务列表 (release-list.html)
+
+**功能特性**:
+- 任务状态筛选(进行中/已完成/已回滚)
+- 发布类型筛选(正式发布/测试发布)
+- 关键词搜索(应用名/操作人)
+- 分页展示
+- 任务详情跳转
+
+**页面元素**:
+- 顶部导航:发布任务、组件管理、节点模拟器
+- 搜索栏:状态、类型、关键词筛选
+- 操作按钮:新建发布任务
+- 任务列表:展示任务基本信息和操作入口
+
+#### 13.1.2 创建发布任务 (release-create.html)
+
+**表单字段**:
+- 基本信息:设备类型、应用名、发布描述
+- 发布类型:正式发布/功能验证
+- 操作类型:新增/升级/移除组件
+- 应用配置:包地址、启动命令、工作目录等
+- 灰度策略:指定节点/规则过滤、灰度比例
+
+**交互逻辑**:
+- 选择应用后自动加载可用包列表
+- 实时预览符合灰度条件的节点数量
+- 表单验证和错误提示
+
+#### 13.1.3 发布任务详情 (release-detail.html)
+
+**信息展示**:
+- 任务基本信息
+- 当前版本配置和灰度版本配置
+- 灰度策略和节点列表
+- 操作历史时间线
+
+**操作功能**:
+- 继续发布(调整灰度比例/增删节点)
+- 完成发布(全量切换)
+- 回滚发布
+- 导出灰度节点
+- 查看操作历史
+
+### 13.2 组件管理界面 (component-management.html)
+
+**功能特性**:
+- 组件列表展示
+- 按名称、节点类型搜索
+- 新增组件
+- 编辑组件信息(路径、描述)
+- 删除组件
+- 分页展示
+
+**表单字段**:
+- 组件名称
+- 节点类型(大节点/小盒子)
+- Kodo 存放路径
+- 组件描述
+
+### 13.3 节点模拟器界面 (node-simulator.html)
+
+**功能特性**:
+- 手动输入节点 ID
+- 随机生成测试节点
+- 批量节点模拟
+- 节点状态展示
+- 启动/停止模拟
+
+**使用场景**:
+- 发布功能测试
+- 灰度策略验证
+- 系统演示
+
+### 13.4 前端技术栈
+
+- **原生 JavaScript**:无框架依赖,轻量级实现
+- **CSS3**:现代化 UI 设计,响应式布局
+- **Fetch API**:与后端 RESTful API 交互
+- **本地代理**:simple-proxy.js 提供开发环境跨域支持
+
+## 14. 工具和测试
+
+### 14.1 节点数据生成工具
+
+**位置**: `tools/generate_nodejoin_data/`
+
+**功能**:
+- 批量生成模拟节点数据
+- 支持自定义节点数量、类型、业务 ID
+- 用于开发和测试环境数据准备
+
+**使用方法**:
+```bash
+cd tools/generate_nodejoin_data
+go run main.go -count=1000 -devType=node -stage=prod
+```
+
+### 14.2 测试包目录
+
+**位置**: `test/pkgs/`
+
+**结构**:
+```
+test/pkgs/
+└── app1/
+    ├── 20251025-app1-tag-v1.0/
+    │   └── app1
+    ├── 20251025-app1-tag-v1.1/
+    │   └── app1
+    └── 20251025-app1-tag-v1.2/
+        └── app1
+```
+
+**用途**:
+- 提供测试用的应用版本包
+- 模拟版本升级场景
+- 验证发布和回滚功能
+
+## 15. 项目进展
+
+### 15.1 Phase 1（已完成）
 
 - ✅ 灰度发布基础能力
 - ✅ 手动回滚
 - ✅ 多版本并行发布
 - ✅ 节点级灰度控制
+- ✅ 组件管理系统
+- ✅ 节点搜索功能
+- ✅ 完整的 Web 管理界面
+- ✅ 节点模拟器测试工具
 
-### 13.2 Phase 2（规划中）
+### 15.2 Phase 2（规划中）
 
 - 🔲 自动健康检查
 - 🔲 自动回滚
 - 🔲 蓝绿发布
 - 🔲 金丝雀发布增强
 
-### 13.3 Phase 3（长期规划）
+### 15.3 Phase 3（长期规划）
 
 - 🔲 K8S 环境适配
 - 🔲 多云部署支持
@@ -1270,6 +1652,7 @@ require (
 | 版本 | 日期 | 作者 | 说明 |
 |------|------|------|------|
 | v1.0 | 2025-10-24 | Claude | 初始版本 |
+| v1.1 | 2025-10-25 | Claude | 新增组件管理、节点搜索、节点模拟器、前端界面设计章节 |
 
 ---
 
