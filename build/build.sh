@@ -187,13 +187,13 @@ create_deploy_package() {
     cp -r doc/DEPLOY.md ${DEPLOY_DIR}/${PACKAGE_NAME}/doc/
     
     # 复制启动脚本
-    if [ -f "start.sh" ]; then
-        cp start.sh ${DEPLOY_DIR}/${PACKAGE_NAME}/
+    if [ -f "build/cmd/start.sh" ]; then
+        cp build/cmd/start.sh ${DEPLOY_DIR}/${PACKAGE_NAME}/
         chmod +x ${DEPLOY_DIR}/${PACKAGE_NAME}/start.sh
     fi
     
-    if [ -f "stop.sh" ]; then
-        cp stop.sh ${DEPLOY_DIR}/${PACKAGE_NAME}/
+    if [ -f "build/cmd/stop.sh" ]; then
+        cp build/cmd/stop.sh ${DEPLOY_DIR}/${PACKAGE_NAME}/
         chmod +x ${DEPLOY_DIR}/${PACKAGE_NAME}/stop.sh
     fi
     
@@ -218,8 +218,11 @@ create_deploy_package() {
 │   └── package.json    # Node.js依赖配置
 ├── doc/                # 文档
 │   └── DEPLOY.md       # 部署文档
-├── start.sh            # 启动脚本
-├── stop.sh             # 停止脚本
+├── build/
+│   ├── build.sh            # 构建脚本
+│   ├── cmd/
+│   │   ├── start.sh            # 启动脚本
+│   │   └── stop.sh             # 停止脚本
 └── README.md           # 本文件
 \`\`\`
 
@@ -243,6 +246,7 @@ EOF
 # 主函数
 main() {
     # 检查环境
+    cd ..
     check_go
     prepare_frontend
     install_node_deps
