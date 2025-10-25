@@ -77,10 +77,6 @@ build_backend() {
     
     cd cmd/jarvis
     
-    # 下载依赖
-    echo "下载Go依赖..."
-    go mod download
-    
     # 构建
     echo "编译后端服务 (${os}/${arch})..."
     binary_name="jarvis-${os}-${arch}"
@@ -258,7 +254,11 @@ main() {
     echo "========================================"
     echo "开始构建所有平台..."
     echo "========================================"
-    
+
+    # 下载依赖
+    echo "下载Go依赖..."
+    go mod download
+
     # 为每个平台构建和打包
     for platform in "${PLATFORMS[@]}"; do
         IFS=':' read -r os arch <<< "$platform"
@@ -269,7 +269,7 @@ main() {
         # 创建部署包
         create_deploy_package ${os} ${arch} ${TIMESTAMP}
     done
-    
+
     echo ""
     echo "========================================"
     echo "所有平台构建完成!"
