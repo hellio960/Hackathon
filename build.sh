@@ -133,9 +133,10 @@ create_deploy_package() {
     
     # 复制后端文件
     echo "复制后端文件..."
-    mkdir -p ${DEPLOY_DIR}/${PACKAGE_NAME}/backend
+    mkdir -p ${DEPLOY_DIR}/${PACKAGE_NAME}/backend/etc
     cp cmd/jarvis/jarvis ${DEPLOY_DIR}/${PACKAGE_NAME}/backend/
-    cp cmd/jarvis/etc/jarvis.yaml ${DEPLOY_DIR}/${PACKAGE_NAME}/backend/jarvis.yaml.example
+    cp cmd/jarvis/etc/jarvis-api.yaml ${DEPLOY_DIR}/${PACKAGE_NAME}/backend/etc/jarvis-api.yaml
+    cp cmd/jarvis/etc/jarvis.yaml ${DEPLOY_DIR}/${PACKAGE_NAME}/backend/etc/jarvis.yaml
     
     # 复制前端文件
     echo "复制前端文件..."
@@ -144,7 +145,8 @@ create_deploy_package() {
     
     # 复制文档
     echo "复制文档..."
-    cp -r doc ${DEPLOY_DIR}/${PACKAGE_NAME}/
+    mkdir -p ${DEPLOY_DIR}/${PACKAGE_NAME}/doc
+    cp -r doc/DEPLOY.md ${DEPLOY_DIR}/${PACKAGE_NAME}/doc/
     
     # 复制启动脚本
     if [ -f "start.sh" ]; then

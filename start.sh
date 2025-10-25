@@ -19,24 +19,9 @@ echo "========================================"
 
 # 检查配置文件
 check_config() {
-    if [ ! -f "${BACKEND_DIR}/jarvis.yaml" ]; then
-        if [ -f "${BACKEND_DIR}/jarvis.yaml.example" ]; then
-            echo -e "${YELLOW}警告: 未找到配置文件 jarvis.yaml${NC}"
-            echo -e "${YELLOW}请复制 jarvis.yaml.example 并修改为 jarvis.yaml${NC}"
-            echo ""
-            read -p "是否使用示例配置启动？(y/N): " -n 1 -r
-            echo
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                cp ${BACKEND_DIR}/jarvis.yaml.example ${BACKEND_DIR}/jarvis.yaml
-                echo -e "${GREEN}已复制示例配置文件${NC}"
-            else
-                echo -e "${RED}启动取消${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${RED}错误: 未找到配置文件${NC}"
-            exit 1
-        fi
+    if [ ! -f "${BACKEND_DIR}/etc/jarvis.yaml" ] || [ -f "${BACKEND_DIR}/etc/jarvis-api.yaml" ]; then
+        echo -e "${YELLOW}警告: 未找到配置文件 etc/jarvis.yaml 或 etc/jarvis-api.yaml${NC}"
+        exit 1
     fi
 }
 
@@ -54,7 +39,7 @@ start_backend() {
     fi
     
     cd ${BACKEND_DIR}
-    nohup ./jarvis -f jarvis.yaml > jarvis.log 2>&1 &
+    nohup ./jarvis > jarvis.log 2>&1 &
     BACKEND_PID=$!
     echo $BACKEND_PID > ../${BACKEND_PID_FILE}
     cd ..
