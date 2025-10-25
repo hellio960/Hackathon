@@ -12,6 +12,39 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+# 支持的平台列表 (格式: OS:ARCH)
+PLATFORMS=("linux:amd64" "darwin:amd64" "darwin:arm64")
+
+# 清理构建产物
+cleanup() {
+    local package_dir=$1
+
+    if [ -z "$package_dir" ]; then
+        echo -e "${RED}错误: 请提供部署包目录作为参数${NC}"
+        exit 1
+    fi
+
+    echo ""
+    echo "========================================"
+    echo "清理构建产物..."
+    echo "========================================"
+
+    rm -rf "$package_dir"
+    echo "已删除: $package_dir"
+
+    # 删除各平台的后端二进制文件
+    for platform in "${PLATFORMS[@]}"; do
+        IFS=':' read -r os arch <<< "$platform"
+        binary_name="jarvis-${os}-${arch}"
+        if [ -f "cmd/jarvis/${binary_name}" ]; then
+            rm -f "cmd/jarvis/${binary_name}"
+            echo "已删除: cmd/jarvis/${binary_name}"
+        fi
+    done
+
+    echo -e "${GREEN}✓ 清理完成${NC}"
+}
+
 # 检查Go环境
 check_go() {
     if ! command -v go &> /dev/null; then
@@ -32,11 +65,14 @@ check_node() {
     return 0
 }
 
-# 构建后端
+# 构建后端 (参数: OS ARCH)
 build_backend() {
+    local os=$1
+    local arch=$2
+    
     echo ""
     echo "========================================"
-    echo "开始构建后端服务..."
+    echo "开始构建后端服务 (${os}/${arch})..."
     echo "========================================"
     
     cd cmd/jarvis
@@ -46,14 +82,15 @@ build_backend() {
     go mod download
     
     # 构建
-    echo "编译后端服务..."
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o jarvis jarvis.go
+    echo "编译后端服务 (${os}/${arch})..."
+    binary_name="jarvis-${os}-${arch}"
+    CGO_ENABLED=0 GOOS=${os} GOARCH=${arch} go build -o ${binary_name} jarvis.go
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✓ 后端构建成功${NC}"
-        echo "二进制文件: cmd/jarvis/jarvis"
+        echo -e "${GREEN}✓ 后端构建成功 (${os}/${arch})${NC}"
+        echo "二进制文件: cmd/jarvis/${binary_name}"
     else
-        echo -e "${RED}✗ 后端构建失败${NC}"
+        echo -e "${RED}✗ 后端构建失败 (${os}/${arch})${NC}"
         exit 1
     fi
     
@@ -116,25 +153,30 @@ EOF
     fi
 }
 
-# 创建部署包
+# 创建部署包 (参数: OS ARCH TIMESTAMP)
 create_deploy_package() {
+    local os=$1
+    local arch=$2
+    local timestamp=$3
+    
     echo ""
     echo "========================================"
-    echo "创建部署包..."
+    echo "创建部署包 (${os}/${arch})..."
     echo "========================================"
     
     DEPLOY_DIR="deploy"
-    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-    PACKAGE_NAME="jarvis-release-${TIMESTAMP}"
+    binary_name="jarvis-${os}-${arch}"
+    platform_name="${os}-${arch}"
+    PACKAGE_NAME="jarvis-release-${platform_name}-${timestamp}"
     
     # 清理旧的部署目录
-    rm -rf ${DEPLOY_DIR}
+    rm -rf ${DEPLOY_DIR}/${PACKAGE_NAME}
     mkdir -p ${DEPLOY_DIR}/${PACKAGE_NAME}
     
     # 复制后端文件
     echo "复制后端文件..."
     mkdir -p ${DEPLOY_DIR}/${PACKAGE_NAME}/backend/etc
-    cp cmd/jarvis/jarvis ${DEPLOY_DIR}/${PACKAGE_NAME}/backend/
+    cp cmd/jarvis/${binary_name} ${DEPLOY_DIR}/${PACKAGE_NAME}/backend/jarvis
     cp cmd/jarvis/etc/jarvis-api.yaml ${DEPLOY_DIR}/${PACKAGE_NAME}/backend/etc/jarvis-api.yaml
     cp cmd/jarvis/etc/jarvis.yaml ${DEPLOY_DIR}/${PACKAGE_NAME}/backend/etc/jarvis.yaml
     
@@ -161,9 +203,9 @@ create_deploy_package() {
     
     # 创建README
     cat > ${DEPLOY_DIR}/${PACKAGE_NAME}/README.md <<EOF
-# Jarvis 智能发布系统部署包
+# Jarvis 智能发布系统部署包 (${platform_name})
 
-构建时间: ${TIMESTAMP}
+构建时间: ${timestamp}
 
 ## 目录结构
 
@@ -195,7 +237,7 @@ EOF
     cd ${DEPLOY_DIR}
     tar -czf ${PACKAGE_NAME}.tar.gz ${PACKAGE_NAME}
     
-    echo -e "${GREEN}✓ 部署包创建成功${NC}"
+    echo -e "${GREEN}✓ 部署包创建成功 (${os}/${arch})${NC}"
     echo "部署包位置: ${DEPLOY_DIR}/${PACKAGE_NAME}.tar.gz"
     echo "解压后目录: ${DEPLOY_DIR}/${PACKAGE_NAME}/"
     
@@ -204,25 +246,47 @@ EOF
 
 # 主函数
 main() {
-    echo "开始构建流程..."
-    echo ""
-    
+    # 检查环境
     check_go
-    build_backend
     prepare_frontend
     install_node_deps
-    create_deploy_package
+    
+    # 获取时间戳
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
     
     echo ""
     echo "========================================"
-    echo -e "${GREEN}构建完成！${NC}"
+    echo "开始构建所有平台..."
     echo "========================================"
+    
+    # 为每个平台构建和打包
+    for platform in "${PLATFORMS[@]}"; do
+        IFS=':' read -r os arch <<< "$platform"
+        
+        # 构建后端
+        build_backend ${os} ${arch}
+        
+        # 创建部署包
+        create_deploy_package ${os} ${arch} ${TIMESTAMP}
+    done
+    
     echo ""
-    echo "后续步骤:"
-    echo "1. 查看部署包: deploy/"
-    echo "2. 阅读部署文档: doc/DEPLOY.md"
-    echo "3. 配置环境并启动服务"
-    echo ""
+    echo "========================================"
+    echo "所有平台构建完成!"
+    echo "========================================"
+    
+    # 显示生成的包
+    echo "生成的部署包:"
+    for platform in "${PLATFORMS[@]}"; do
+        IFS=':' read -r os arch <<< "$platform"
+        platform_name="${os}-${arch}"
+        PACKAGE_NAME="jarvis-release-${platform_name}-${TIMESTAMP}"
+        echo "  - deploy/${PACKAGE_NAME}.tar.gz"
+
+        # 清理构建产物
+        cleanup "deploy/${PACKAGE_NAME}"
+    done
 }
 
-main
+# 执行主函数
+main "$@"

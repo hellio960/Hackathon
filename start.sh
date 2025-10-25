@@ -19,7 +19,7 @@ echo "========================================"
 
 # 检查配置文件
 check_config() {
-    if [ ! -f "${BACKEND_DIR}/etc/jarvis.yaml" ] || [ -f "${BACKEND_DIR}/etc/jarvis-api.yaml" ]; then
+    if [ ! -f "${BACKEND_DIR}/etc/jarvis.yaml" ] || [ ! -f "${BACKEND_DIR}/etc/jarvis-api.yaml" ]; then
         echo -e "${YELLOW}警告: 未找到配置文件 etc/jarvis.yaml 或 etc/jarvis-api.yaml${NC}"
         exit 1
     fi
