@@ -104,6 +104,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/v1/release/allowapps",
 				Handler: noderelease.NodeReleaseAllowAppsUpdateHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/v1/nodes/search",
+				Handler: noderelease.NodesSearchHandler(serverCtx),
+			},
 		},
 	)
 }

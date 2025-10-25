@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>节点模拟器</title>
+    <link rel="stylesheet" href="css/node-simulator.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>节点模拟器</h1>
+            <div class="header-actions">
+                <button class="btn btn-link" onclick="window.location.href='release-list.html'">返回发布列表</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- 节点选择区域 -->
+            <div class="selection-section">
+                <h2>节点选择</h2>
+                <div class="selection-controls">
+                    <div class="input-group">
+                        <label>节点ID（每行一个）</label>
+                        <textarea id="nodeIdsInput" rows="4" placeholder="请输入节点ID，每行一个"></textarea>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" id="startSimulationBtn">开始模拟</button>
+                        <button class="btn btn-secondary" id="randomSelectBtn">随机选择10个节点</button>
+                        <button class="btn btn-danger" id="stopSimulationBtn" disabled>停止模拟</button>
+                    </div>
+                    <div class="status-info">
+                        <span class="status-label">状态：</span>
+                        <span class="status-value" id="simulationStatus">未运行</span>
+                        <span class="node-count-label">节点数：</span>
+                        <span class="node-count-value" id="nodeCount">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 节点展示区域 -->
+            <div class="display-section">
+                <div class="nodes-panel">
+                    <h2>节点列表</h2>
+                    <div class="nodes-container" id="nodesContainer">
+                        <div class="empty-message">请选择节点并开始模拟</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/node-simulator.js"></script>
+</body>
+</html>
+

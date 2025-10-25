@@ -238,6 +238,28 @@ type NodeReleaseHistoryReq struct {
 	ReleaseID string `path:"releaseID"` // 发布任务id
 }
 
+type NodesSearchReq struct {
+	DevType     string   `json:"devType,optional"`     // 设备类型
+	Stage       string   `json:"stage,optional"`       // 节点阶段
+	Status      string   `json:"status,optional"`      // 节点状态
+	CustomerIds []uint32 `json:"customerIds,optional"` // 业务ID
+	NodeIds     []string `json:"nodeIds,optional"`     // 指定节点ID
+	Size        int      `json:"size,default=10"`      // 返回数量
+}
+
+type NodesSearchResp struct {
+	Nodes []NodeInfo `json:"nodes"` // 节点列表
+	Total int        `json:"total"` // 总数
+}
+
+type NodeInfo struct {
+	NodeId      string   `json:"nodeId"`      // 节点ID
+	DeviceType  string   `json:"deviceType"`  // 设备类型
+	Stage       string   `json:"stage"`       // 节点阶段
+	Status      string   `json:"status"`      // 节点状态
+	CustomerIDs []uint32 `json:"customerIDs"` // 业务ID
+}
+
 type NodeReleaseHistoryResp struct {
 	Items []NodeReleaseHistoryItem `json:"items"`
 }
@@ -263,6 +285,6 @@ type GrayPolicyRemark struct {
 	NodeIdsDel       []string    `bson:"nodeIdsDel" json:"nodeIdsDel"`
 	AfterFilter      *GrayFilter `bson:"afterFilter" json:"afterFilter"`
 	FilterChangeMode string      `bson:"filterChangeMode" json:"filterChangeMode"`
-	BeforePercentage int         `bson:"percentage" json:"percentage"`
-	AfterPercentage  int         `bson:"percentage" json:"afterPercentage"`
+	BeforePercentage int         `bson:"beforePercentage" json:"beforePercentage"`
+	AfterPercentage  int         `bson:"afterPercentage" json:"afterPercentage"`
 }

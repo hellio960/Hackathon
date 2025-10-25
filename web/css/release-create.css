@@ -1,0 +1,529 @@
+/* 基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+        'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 页面头部 */
+.page-header {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.page-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #1a1a1a;
+}
+
+.tabs {
+    display: flex;
+    gap: 30px;
+    border-bottom: 2px solid #e8e8e8;
+}
+
+.tab {
+    padding: 10px 5px;
+    cursor: pointer;
+    color: #666;
+    font-size: 15px;
+    position: relative;
+    transition: color 0.3s;
+}
+
+.tab:hover {
+    color: #1890ff;
+}
+
+.tab.active {
+    color: #1890ff;
+    font-weight: 500;
+}
+
+.tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #1890ff;
+}
+
+/* 创建表单容器 */
+.create-form-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.form-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.form-title h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #999;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.3s;
+}
+
+.close-btn:hover {
+    color: #666;
+}
+
+/* 表单步骤 */
+.form-step {
+    display: none;
+}
+
+.form-step.active {
+    display: block;
+}
+
+.form-content {
+    padding: 30px;
+    max-width: 900px;
+}
+
+/* 信息展示区 */
+.info-section {
+    background: #f7f9fc;
+    padding: 20px;
+    border-radius: 6px;
+    margin-bottom: 30px;
+}
+
+.info-row {
+    display: flex;
+    padding: 8px 0;
+}
+
+.info-label {
+    width: 120px;
+    color: #666;
+    font-size: 14px;
+}
+
+.info-value {
+    flex: 1;
+    color: #1a1a1a;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* 区域标题 */
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 30px 0 20px 0;
+    padding-left: 12px;
+    border-left: 3px solid #1890ff;
+}
+
+/* 配置区块 */
+.config-section {
+    background: #fafafa;
+    padding: 24px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.readonly-section {
+    background: #f7f9fc;
+}
+
+.readonly-section input {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+    color: #666;
+}
+
+/* 表单组 */
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+.required {
+    color: #ff4d4f;
+    margin-left: 2px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.3s;
+    background-color: white;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #1890ff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.6;
+}
+
+.form-hint {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #999;
+}
+
+/* 单选按钮组 */
+.radio-group {
+    display: flex;
+    gap: 30px;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.radio-label input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.radio-text {
+    color: #333;
+}
+
+/* 复选按钮组 */
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    min-width: 140px;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.checkbox-text {
+    color: #333;
+}
+
+/* 灰度比例区域增加上边距 */
+.gray-percentage-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #e8e8e8;
+}
+
+/* 多选下拉框样式 */
+select[multiple] {
+    padding: 8px;
+    cursor: pointer;
+}
+
+select[multiple] option {
+    padding: 6px 8px;
+    cursor: pointer;
+    border-radius: 2px;
+    margin: 2px 0;
+}
+
+select[multiple] option:hover {
+    background-color: #e6f7ff;
+}
+
+select[multiple] option:checked {
+    background: #1890ff linear-gradient(0deg, #1890ff 0%, #1890ff 100%) !important;
+    color: white !important;
+    font-weight: 500;
+}
+
+/* 包选择组 */
+.package-select-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.package-select-group select {
+    flex: 1;
+}
+
+/* 百分比输入组 */
+.percentage-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.percentage-input-group input {
+    width: 150px;
+}
+
+.percentage-unit {
+    font-size: 14px;
+    color: #666;
+}
+
+/* 灰度模式区块 */
+.gray-mode-section {
+    margin-top: 20px;
+}
+
+/* 按钮 */
+.btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #1890ff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #40a9ff;
+}
+
+.btn-primary:active {
+    background-color: #096dd9;
+}
+
+.btn-secondary {
+    background-color: white;
+    color: #666;
+    border: 1px solid #d9d9d9;
+}
+
+.btn-secondary:hover {
+    color: #1890ff;
+    border-color: #1890ff;
+}
+
+.btn-link {
+    background: none;
+    color: #1890ff;
+    padding: 0;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-link:hover {
+    color: #40a9ff;
+    text-decoration: underline;
+}
+
+/* 表单操作区 */
+.form-actions {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid #e8e8e8;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+}
+
+/* 加载动画 */
+.loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading.hidden {
+    display: none;
+}
+
+.loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #1890ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    margin-top: 16px;
+    color: white;
+    font-size: 14px;
+}
+
+/* 弹窗 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.modal-small {
+    max-width: 500px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.modal-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e8e8e8;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    .form-content {
+        padding: 20px;
+    }
+
+    .radio-group {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .package-select-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+
